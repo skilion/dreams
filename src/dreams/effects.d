@@ -131,7 +131,7 @@ class StarField: Effect
 	private Star createStar(float width, float height)
 	{
 		Star star;
-		star.size = dice(rnd, 0, 40, 30, 20, 10);
+		star.size = cast(uint) dice(rnd, 0, 40, 30, 20, 10);
 		star.time = uniform!"[]"(minTime, maxTime, rnd);
 		star.x = uniform!"[]"(0, width, rnd);
 		star.y = uniform!"[]"(0, height, rnd);

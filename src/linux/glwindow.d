@@ -354,7 +354,7 @@ final class OpenGLWindow
 
 		if (GLX_ARB_create_context) {
 			//TODO
-			int[3] attribList = [
+			int[5] attribList = [
 				GLX_CONTEXT_MAJOR_VERSION_ARB, 2,
 				GLX_CONTEXT_MINOR_VERSION_ARB, 0,
 				//GLX_CONTEXT_FLAGS_ARB, GLX_CONTEXT_DEBUG_BIT_ARB// | GLX_CONTEXT_FORWARD_COMPATIBLE_BIT,

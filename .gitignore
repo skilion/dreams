@@ -1,14 +1,1 @@
-*.build
-*.cmd
-*.dep
-*.exe
-*.exe_cv
-*.html
-*.json
-*.lnkarg
-*.map
-*.o
-*.obj
-*.pdb
-*.rsp
 *.suo
