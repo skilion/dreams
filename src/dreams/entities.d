@@ -107,7 +107,7 @@ struct Player
 			velocity += Vec3f(0, -g * fallingTime, 0);
 		}
 
-		immutable float speed = 100;
+		immutable float speed = 5;
 		immutable auto up = Vec3f(0, 1, 0);
 		Vec3f v = Vec3f(0, 0, 0);
 		if (flags & Flag.forward) {

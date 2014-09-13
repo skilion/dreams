@@ -172,9 +172,8 @@ final class Source
 		assert(sound);
 		this.sound = sound;
 		if (sound.isStreamed) {
-			sound.setPosition(0);
-			foreach (buffer; buffers) fillBuffer(buffer);
-			alSourceQueueBuffers(source, queueBuffersNum, buffers.ptr);
+			sound.seekPcm(0);
+			initBuffers();
 		} else {
 			alBufferData(buffers[0], sound.format, sound.buffer.ptr, cast(ALsizei) sound.buffer.length, sound.frequency);
 			alSourcei(source, AL_BUFFER, buffers[0]);
@@ -216,6 +215,7 @@ final class Source
 	void stop()
 	{
 		alSourceStop(source);
+		if (sound.isStreamed) sound.seekPcm(0);
 	}
 
 	bool isActive()
@@ -231,6 +231,48 @@ final class Source
 		alGetSourcei(source, AL_SOURCE_STATE, &state);
 		return state == AL_INITIAL || state == AL_STOPPED;
 	}
+
+	/*void seekPcm(uint position)
+	{
+		if (isStreamed) {
+			setStreamPosition(&stream, position);
+		} else {
+			alSourcei(source, AL_SAMPLE_OFFSET, position);
+		}
+	}
+
+	uint tellPcm()
+	{
+		uint position;
+		alGetSourcei(source, AL_SAMPLE_OFFSET, &position);
+		if (isStreamed) {
+			assert(0);
+			//position += getStreamPosition(&stream);
+		}
+		return position;
+	}*/
+
+	void seekTime(float position)
+	{
+		assert(isInactive(), "Source.seekTime: Source is playing");
+		if (sound.isStreamed) {
+			sound.seekTime(position);
+			alSourcei(source, AL_BUFFER, AL_NONE);
+			initBuffers();
+		} else {
+			alSourcef(source, AL_SEC_OFFSET, position);
+		}
+	}
+
+	/*float tellTime()
+	{
+		float position;
+		if (isStreamed) {
+		} else {
+			alGetSourcef(source, AL_SEC_OFFSET, &position);
+		}
+		return position;
+	}*/
 
 	void update()
 	{
@@ -257,8 +299,13 @@ final class Source
 	{
 		ALsizei read = sound.fillBuffer();
 		alBufferData(buffer, sound.format, sound.buffer.ptr, read, sound.frequency);
-		if (alGetError() != 0) dev("buffer %s read %s", buffer, read);
 		return read != 0;
+	}
+
+	private void initBuffers()
+	{
+		foreach (buffer; buffers) fillBuffer(buffer);
+		alSourceQueueBuffers(source, queueBuffersNum, buffers.ptr);
 	}
 }
 
@@ -398,14 +445,24 @@ final class Sound
 		return read(buffer, cast(uint) buffer.length);
 	}
 
-	uint getPosition()
+	void seekPcm(uint position)
+	{
+		setStreamPosition(&stream, position);
+	}
+
+	uint tellPcm()
 	{
 		return getStreamPosition(&stream);
 	}
 
-	void setPosition(uint position)
+	void seekTime(float position)
 	{
-		setStreamPosition(&stream, position);
+		setStreamPosition(&stream, cast(uint) (position * frequency));
+	}
+
+	float tellTime()
+	{
+		return getStreamPosition(&stream) / cast(float) frequency;
 	}
 }
 

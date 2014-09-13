@@ -194,9 +194,9 @@
   <Folder name="dreams">
    <File path="src\dreams\camera.d" />
    <File path="src\dreams\culling.d" />
+   <File path="src\dreams\demo.d" />
    <File path="src\dreams\effects.d" />
    <File path="src\dreams\entities.d" />
-   <File path="src\dreams\demo.d" />
    <File path="src\dreams\imm3d.d" />
    <File path="src\dreams\noise.d" />
    <File path="src\dreams\particles.d" />
@@ -206,6 +206,11 @@
    <File path="src\dreams\world_mesh.d" />
    <File path="src\dreams\world_renderer.d" />
   </Folder>
+  <Folder name="gl">
+   <File path="src\gl\common.d" />
+   <File path="src\gl\core.d" />
+   <File path="src\gl\ext.d" />
+  </Folder>
   <Folder name="windows">
    <File path="src\windows\glloader.d" />
    <File path="src\windows\glwindow.d" />
@@ -214,11 +219,6 @@
    <File path="src\windows\wgl.d" />
    <File path="src\windows\wglext.d" />
    <File path="src\windows\windows.d" />
-  </Folder>
-  <Folder name="gl">
-   <File path="src\gl\common.d" />
-   <File path="src\gl\core.d" />
-   <File path="src\gl\ext.d" />
   </Folder>
   <File path="src\audio.d" />
   <File path="src\cstr.d" />

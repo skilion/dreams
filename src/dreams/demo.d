@@ -20,15 +20,22 @@ private:
 
 	Player player;
 	FpsCamera camera;
-
+	
+	EffectSystem ef;
 	ParticleSystem ps;
-	Effect currentEffect;
+
+	Sound mainMusic;
+	Source mainMusicSource;
 
 	enum State {
 		edit,
 		playing,
 	}
 	State state;
+
+	// Demo moments
+	float cumulativeTime = 0;
+	int demoState = 0;
 
 	// editor variables
 	enum SelectionMode {
@@ -51,6 +58,7 @@ public:
 		ctx = new GraphicsContext(super.renderer);
 		imm = new Immediate3D(super.renderer);
 		worldRenderer = new WorldRenderer(super.renderer);
+		ef = new EffectSystem();
 		ps = new ParticleSystem();
 	}
 
@@ -67,13 +75,25 @@ public:
 		ctx.init();
 		worldRenderer.init();
 		skybox.init(renderer);
+
+		input.connect(&onKeyEvent);
+		input.connect(&onMouseButtonEvent);
+		input.connect(&camera.onPointerMoveEvent);
+
 		smallFont = ctx.createFont("FSEX300.ttf", 12, false);
 		defaultFont = ctx.createFont("FSEX300.ttf", 16, false);
 
+		mainMusic = new Sound("music.ogg", true);
+		mainMusicSource = audio.getSource();
+		mainMusicSource.setSound(mainMusic);
+
+		// start with a black screen
+		ef.push(new Blank(ctx, black, 1000));
+
 		player.position = Vec3f(512, 130, 512);
 		world = new World(5);
-		enum uint a = 0;
-		enum uint b = 1024;
+		enum uint a = 512 - 32;
+		enum uint b = 512 + 32;
 		for (uint x = a; x < b; x++) {
 			for (uint z = a; z < b; z++) {
 				uint h = cast(uint) (128 * perlin(x / 128.0f, 0, z / 128.0f));
@@ -85,24 +105,7 @@ public:
 
 		worldRenderer.setWorldRoot(world.root);
 
-		Emitter* e = new Emitter;
-		e.position = Vec3f(512, 130, 510);
-		e.minSize = 0;
-		e.maxSize = 1;
-		e.rate = 100;
-		e.minDuration = 4;
-		e.maxDuration = 5;
-		e.velocity = Vec3f(1, 3, 1);
-		ps.addEmitter(e);
-		ps.gravity = Vec3f(0, -2, 0);
-
-		input.connect(&onKeyEvent);
-		input.connect(&onMouseButtonEvent);
-		input.connect(&camera.onPointerMoveEvent);
 		setState(State.edit);
-
-		//currentEffect = new Fade(ctx, black, transparent, 10);
-		currentEffect = new StarField(ctx, 100, 60);
 	}
 
 	override void shutdown()
@@ -127,7 +130,7 @@ public:
 		view.fov = 60 * PI / 180;
 		view.aspect = width / cast(float) height;
 		view.near = 0.1;
-		view.far = 1000;
+		view.far = 100;
 		view.position = player.position;
 		view.forward = player.forward;
 		view.side = view.forward.cross(Vec3f(0, 1, 0)).normalize();
@@ -145,7 +148,7 @@ public:
 		imm.flush();
 
 		// 2D effects
-		currentEffect.draw();
+		ef.draw();
 
 		// editor
 		if (state == State.edit) {
@@ -169,7 +172,7 @@ public:
 		}
 
 		// user interface
-		//drawUI();
+		drawUI();
 
 		ctx.flush();
 		renderingComplete = true;
@@ -177,8 +180,9 @@ public:
 
 	override void update(float time)
 	{
+		demoManager(time);
 		ps.update(time);
-		currentEffect.update(time);
+		ef.update(time);
 
 		camera.update();
 		player.forward = camera.forward;
@@ -337,6 +341,51 @@ public:
 		case State.playing:
 			player.unsetFlag(Player.Flag.fly);
 			break;
+		}
+	}
+
+	/*
+		Launches the correct events at the right time
+	*/
+	void demoManager(float time)
+	{
+		if (demoState == 0) {
+			immutable float sec = 0; // DEV: jump to precise moment
+			mainMusicSource.seekTime(sec);
+			cumulativeTime = sec;
+			mainMusicSource.play();
+		}
+		cumulativeTime += time;
+		if (cumulativeTime <= 8.8f) {
+			if (demoState != 1) {
+				demoState = 1;
+				ef.clear();
+				ef.push(new Blank(ctx, black, 0.1f));
+				ef.push(new Fade(ctx, black, white, 0.5f));
+				ef.push(new Fade(ctx, white, black, 3.8f));
+				ef.push(new Fade(ctx, black, white, 0.5f));
+				ef.push(new Fade(ctx, white, black, 4.0f));
+			}
+		} else if (cumulativeTime <= 17) {
+			if (demoState != 2) {
+				demoState = 2;
+				ef.clear();
+				immutable c1 = Vec4f(0, 0.6f, 0.85f, 1.0f);
+				immutable c2 = Vec4f(0.1f, 0.7f, 0.3f, 1.0f);
+				ef.push(new Fade(ctx, black, c1, 0.8f));
+				ef.push(new Fade(ctx, c1, black, 3.5f));
+				ef.push(new Fade(ctx, black, c2, 0.5f));
+				ef.push(new Fade(ctx, c2, black, 4.0f));
+				ef.push(new Blank(ctx, black, 1000));
+			}
+		} else if (cumulativeTime <= 34) {
+			if (demoState != 3) {
+				demoState = 3;
+				ef.clear();
+				ef.push(new Fade(ctx, black, white, 0.5f));
+				ef.push(new Fade(ctx, white, black, 0.5f));
+				ef.push(new StarField(ctx, 100, 17, 9));
+			}
 		}
 	}
 

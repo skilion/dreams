@@ -6,8 +6,34 @@ import log, graphics, vector;
 
 interface Effect
 {
-	void update(float time);
+	bool update(float time); // returns false if the effect is finished
 	void draw();
+}
+
+class Blank: Effect
+{
+	private GraphicsContext ctx;
+	private Vec4f color;
+	private float duration;
+
+	this(GraphicsContext ctx, Vec4f color, float duration)
+	{
+		this.ctx = ctx;
+		this.color = color;
+		this.duration = duration;
+	}
+
+	bool update(float time)
+	{
+		duration -= time;
+		return duration >= 0;
+	}
+
+	void draw()
+	{
+		ctx.setColor(color);
+		ctx.drawFilledRect(0, 0, int.max, int.max);
+	}
 }
 
 class Fade: Effect
@@ -25,9 +51,10 @@ class Fade: Effect
 		this.duration = duration;
 	}
 
-	void update(float time)
+	bool update(float time)
 	{
 		this.time += time;
+		return this.time <= duration;
 	}
 
 	void draw()
@@ -42,24 +69,28 @@ class StarField: Effect
 	private GraphicsContext ctx;
 	private Xorshift rnd;
 	private float duration; // no star is created if it's less than zero
+	private float change; // if duration < change, all stars become colorful
+	private static float minTime = 2.0f;
 	private static float maxTime = 3.0f; // max time needed to reach full brightness
 
 	private struct Star {
 		int size;
-		float time;
-		float x = float.max, y = float.max;
+		float time = 0;
+		float x = -1, y = -1;
 	}
 
 	private Star[] stars;
 
-	this(GraphicsContext ctx, uint count, float duration)
+	this(GraphicsContext ctx, uint count, float duration, float change)
 	{
+		assert(change < duration);
 		this.ctx = ctx;
 		this.duration = duration;
+		this.change = change;
 		stars = new Star[count];
 	}
 
-	void update(float time)
+	bool update(float time)
 	{
 		int width, height;
 		ctx.getSize(width, height);
@@ -77,6 +108,7 @@ class StarField: Effect
 			star.y += (star.y - halfHeight) * s;
 		}
 		duration -= time;
+		return duration >= 0;
 	}
 
 	void draw()
@@ -84,7 +116,14 @@ class StarField: Effect
 		ctx.setColor(black);
 		ctx.drawFilledRect(0, 0, int.max, int.max);
 		foreach (ref star; stars) {
-			ctx.setColor(mix(white, black, star.time * (1 / maxTime)));
+			if (duration > change) ctx.setColor(mix(white, black, star.time * (1 / maxTime)));
+			else {
+				immutable float s = 0.01f; // slowing factor
+				float a = star.x * s;// * star.size;
+				float b = star.y * s;// * star.size;
+				float c = star.x * star.y * s * s;// * star.size;
+				ctx.setColor(Vec4f(fabs(sin(a)), fabs(sin(b)), fabs(sin(c)), 1.0f));
+			}
 			ctx.drawFilledRect(cast(int) star.x, cast(int) star.y, star.size, star.size);
 		}
 	}
@@ -93,9 +132,45 @@ class StarField: Effect
 	{
 		Star star;
 		star.size = dice(rnd, 0, 40, 30, 20, 10);
-		star.time = uniform!"[]"(maxTime - 1, maxTime, rnd);
+		star.time = uniform!"[]"(minTime, maxTime, rnd);
 		star.x = uniform!"[]"(0, width, rnd);
 		star.y = uniform!"[]"(0, height, rnd);
 		return star;
+	}
+}
+
+final class EffectSystem
+{
+	private Effect[] effects;
+
+	this()
+	{
+		effects.reserve(16);
+	}
+
+	void push(Effect effect)
+	{
+		effects ~= effect;
+	}
+
+	void clear()
+	{
+		effects.length = 0;
+	}
+
+	void update(float time)
+	{
+		if (effects.length > 0) {
+			if (!effects[0].update(time)) {
+				effects = effects [1 .. $];
+			}
+		}
+	}
+
+	void draw()
+	{
+		if (effects.length > 0) {
+			effects[0].draw();
+		}
 	}
 }
