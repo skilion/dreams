@@ -10,11 +10,12 @@ private immutable float maxFallingTime = 1 / (0.015 * g); // minumum falling tim
 struct Player
 {
 	enum Flag: uint {
-		forward  = 0b00001,
-		backward = 0b00010,
-		left     = 0b00100,
-		right    = 0b01000,
-		fly      = 0b10000
+		forward  = 0b000001,
+		backward = 0b000010,
+		left     = 0b000100,
+		right    = 0b001000,
+		fly      = 0b010000,
+		noclip   = 0b100000
 	}
 
 	uint flags;
@@ -76,6 +77,11 @@ struct Player
 			}
 		}
 
+		// noclip
+		if (flags & Flag.noclip) {
+			newPosition += distance;
+		}
+
 		// update position
 		position = newPosition;
 
@@ -107,7 +113,7 @@ struct Player
 			velocity += Vec3f(0, -g * fallingTime, 0);
 		}
 
-		immutable float speed = 5;
+		immutable float speed = 10;
 		immutable auto up = Vec3f(0, 1, 0);
 		Vec3f v = Vec3f(0, 0, 0);
 		if (flags & Flag.forward) {

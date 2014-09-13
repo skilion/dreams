@@ -90,16 +90,14 @@ public:
 		// start with a black screen
 		ef.push(new Blank(ctx, black, 1000));
 
-		player.position = Vec3f(512, 130, 512);
+		player.position = Vec3f(128, 515, 10);
 		world = new World(5);
 		enum uint a = 512 - 32;
 		enum uint b = 512 + 32;
-		for (uint x = a; x < b; x++) {
-			for (uint z = a; z < b; z++) {
-				uint h = cast(uint) (128 * perlin(x / 128.0f, 0, z / 128.0f));
-				//for (uint y = h; y < h; y++) {
-					world.root.insertBlock(WorldBlock(1, h > 64 ? 17: 16), x, h, z);
-				//}
+		for (uint x = 128; x < 128 + 15; x++) {
+			for (uint z = 0; z < 1024; z++) {
+				if ((x == 128 + 7) && (z % 4 != 3)) world.root.insertBlock(WorldBlock(1, 33), x, 512, z);
+				else world.root.insertBlock(WorldBlock(1, 32), x, 512, z);
 			}
 		}
 
@@ -349,6 +347,8 @@ public:
 	*/
 	void demoManager(float time)
 	{
+		ef.clear();
+		return;
 		if (demoState == 0) {
 			immutable float sec = 0; // DEV: jump to precise moment
 			mainMusicSource.seekTime(sec);
