@@ -69,7 +69,7 @@ class StarField: Effect
 	private GraphicsContext ctx;
 	private Xorshift rnd;
 	private float duration; // no star is created if it's less than zero
-	private float change; // if duration < change, all stars become colorful
+	private float change; // if change < 0, all stars become colorful
 	private static float minTime = 2.0f;
 	private static float maxTime = 3.0f; // max time needed to reach full brightness
 
@@ -108,6 +108,7 @@ class StarField: Effect
 			star.y += (star.y - halfHeight) * s;
 		}
 		duration -= time;
+		change -= time;
 		return duration >= 0;
 	}
 
@@ -116,8 +117,9 @@ class StarField: Effect
 		ctx.setColor(black);
 		ctx.drawFilledRect(0, 0, int.max, int.max);
 		foreach (ref star; stars) {
-			if (duration > change) ctx.setColor(mix(white, black, star.time * (1 / maxTime)));
-			else {
+			if (change >= 0) {
+				ctx.setColor(mix(white, black, star.time * (1 / maxTime)));
+			} else {
 				immutable float s = 0.01f; // slowing factor
 				float a = star.x * s;// * star.size;
 				float b = star.y * s;// * star.size;

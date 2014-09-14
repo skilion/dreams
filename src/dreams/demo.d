@@ -286,7 +286,7 @@ public:
 				break;
 			case KeySymbol.k_f3: // toggle fly
 				if (keyEvent.type == KeyEvent.Type.press) {
-					player.flags ^= Player.Flag.fly | Player.Flag.noclip;
+					player.flags ^= Player.Flag.noclip;
 				}
 				break;
 			case KeySymbol.k_f5: // save
@@ -363,10 +363,10 @@ public:
 	{
 		final switch (state) {
 		case State.edit:
-			player.setFlag(Player.Flag.fly);
+			player.setFlag(Player.Flag.noclip);
 			break;
 		case State.playing:
-			player.unsetFlag(Player.Flag.fly);
+			player.unsetFlag(Player.Flag.noclip);
 			break;
 		}
 	}
@@ -395,7 +395,7 @@ public:
 				ef.push(new Fade(ctx, black, white, 0.5f));
 				ef.push(new Fade(ctx, white, black, 4.0f));
 			}
-		} else if (cumulativeTime <= 17) {
+		} else if (cumulativeTime <= 17.5f) {
 			if (demoState != 2) {
 				demoState = 2;
 				ef.clear();
@@ -413,7 +413,14 @@ public:
 				ef.clear();
 				ef.push(new Fade(ctx, black, white, 0.5f));
 				ef.push(new Fade(ctx, white, black, 0.5f));
-				ef.push(new StarField(ctx, 100, 17, 9));
+				ef.push(new StarField(ctx, 100, 17, 7.8f));
+			}
+		} else if (cumulativeTime <= 60) {
+			if (demoState != 4) {
+				demoState = 4;
+				ef.clear();
+				ef.push(new Fade(ctx, black, white, 0.5f));
+				ef.push(new Fade(ctx, white, black, 0.5f));
 			}
 		}
 	}

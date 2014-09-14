@@ -118,14 +118,14 @@ struct WorldMesh
 		foreach (face; 0 .. 6) {
 			if (visibleFaces & 1) {
 				foreach (i; 0 .. 4) { // foreach vertex
-					ao[i] = vertexAO(base + i, near);
+					ao[i] = vertexAmbientOcclusion(base + i, near);
 					vertex = blockVertices[base + i];
 					vertex.position[0] += x;
 					vertex.position[1] += y;
 					vertex.position[2] += z;
 					vertex.texcoord[0] += s;
 					vertex.texcoord[1] += t;
-					vertex.color[0 .. 3] = cast(byte) (ao[i] * 25 + 52);
+					vertex.color[0 .. 3] = cast(byte) (ao[i] * 30 + 37);
 					faceVertices[i] = addVertex(vertex);
 				}
 				if (ao[0] + ao[2] > ao[1] + ao[3]) {
@@ -168,8 +168,7 @@ private uint testVisibleFaces(WorldBlock left, WorldBlock right, WorldBlock bott
 	return visibleFaces;
 }
 
-// ambient occlusion
-private int vertexAO(int vertex, const ref WorldBlock[27] near)
+private int vertexAmbientOcclusion(int vertex, const ref WorldBlock[27] near)
 {
 	WorldBlock side0, side1, corner;
 	final switch (vertex) {

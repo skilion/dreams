@@ -14,8 +14,7 @@ struct Player
 		backward = 0b000010,
 		left     = 0b000100,
 		right    = 0b001000,
-		fly      = 0b010000,
-		noclip   = 0b100000
+		noclip   = 0b010000
 	}
 
 	uint flags;
@@ -102,7 +101,7 @@ struct Player
 		auto velocity = Vec3f(0, 0, 0);
 
 		Vec3f forward;
-		if ((flags & Flag.fly)) {
+		if ((flags & Flag.noclip)) {
 			forward = this.forward;
 		} else {
 			forward.x = this.forward.dot(Vec3f(1, 0, 0));
