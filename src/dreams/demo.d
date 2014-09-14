@@ -1,8 +1,9 @@
 module dreams.demo;
 
 import std.algorithm, std.conv, std.math;
-import dreams.camera, dreams.effects, dreams.entities, dreams.imm3d, dreams.noise, dreams.particles;
-import dreams.skybox, dreams.view, dreams.world, dreams.world_renderer;
+import dreams.camera, dreams.editor, dreams.effects, dreams.entities;
+import dreams.imm3d, dreams.noise, dreams.particles, dreams.skybox;
+import dreams.view, dreams.world, dreams.world_renderer;
 import audio, cstr, engine, graphics, input;
 import log, matrix, renderer, vector;
 
@@ -33,7 +34,7 @@ private:
 	}
 	State state;
 
-	// Demo moments
+	// demo advancement
 	float cumulativeTime = 0;
 	int demoState = 0;
 
@@ -43,9 +44,11 @@ private:
 		fixedDistance,
 		ray,
 		paint
-	};
+	}
+	Editor editor;
 	ubyte textureId;
 	bool selecting;
+	byte ctrl; // true if ctrl is pressed
 	SelectionMode selectionMode;
 	uint[3] selectionStart, selectionEnd;
 
@@ -102,6 +105,7 @@ public:
 		}
 
 		worldRenderer.setWorldRoot(world.root);
+		editor = new Editor(world.root);
 
 		setState(State.edit);
 	}
@@ -253,6 +257,26 @@ public:
 					}
 				}
 				break;
+			case KeySymbol.k_c: // copy
+				if (keyEvent.type == KeyEvent.Type.press && ctrl) {
+					// editor.copy();
+				}
+				break;
+			case KeySymbol.k_v: // paste
+				if (keyEvent.type == KeyEvent.Type.press && ctrl) {
+					// editor.paste();
+				}
+				break;
+			case KeySymbol.k_z: // undo
+				if (keyEvent.type == KeyEvent.Type.press && ctrl) {
+					editor.undo();
+				}
+				break;
+			case KeySymbol.k_y: // redo
+				if (keyEvent.type == KeyEvent.Type.press && ctrl) {
+					editor.redo();
+				}
+				break;
 			case KeySymbol.k_f2: // reset renderer
 				if (keyEvent.type == KeyEvent.Type.press) {
 					import core.memory;
@@ -262,7 +286,7 @@ public:
 				break;
 			case KeySymbol.k_f3: // toggle fly
 				if (keyEvent.type == KeyEvent.Type.press) {
-					player.flags ^= Player.Flag.fly;
+					player.flags ^= Player.Flag.fly | Player.Flag.noclip;
 				}
 				break;
 			case KeySymbol.k_f5: // save
@@ -279,7 +303,12 @@ public:
 				if (keyEvent.type == KeyEvent.Type.release) {
 					world = new World(5);
 					worldRenderer.setWorldRoot(world.root);
+					editor = new Editor(world.root);
 				}
+				break;
+			case KeySymbol.k_lctrl:
+				if (keyEvent.type == KeyEvent.Type.release) ctrl = false;
+				else ctrl = true;
 				break;
 			default:
 			}

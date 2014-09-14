@@ -36,7 +36,7 @@ struct Skybox
 		vertexBuffer = renderer.createVertexBuffer();
 		renderer.updateIndexBuffer(indexBuffer, skyboxIndices, BufferUsage.staticDraw);
 		renderer.updateVertexBuffer(vertexBuffer, skyboxVertices, BufferUsage.staticDraw);
-		skyboxTexture = renderer.loadTexture("skytest.png", TextureFilter.linear, TextureWrap.repeat);
+		skyboxTexture = renderer.loadTexture("skymap1.png", TextureFilter.linear, TextureWrap.repeat);
 	}
 
 	void shutdown()

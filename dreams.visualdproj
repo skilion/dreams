@@ -195,6 +195,7 @@
    <File path="src\dreams\camera.d" />
    <File path="src\dreams\culling.d" />
    <File path="src\dreams\demo.d" />
+   <File path="src\dreams\editor.d" />
    <File path="src\dreams\effects.d" />
    <File path="src\dreams\entities.d" />
    <File path="src\dreams\imm3d.d" />

@@ -347,15 +347,22 @@ struct World
 		return false;
 	}
 
+	/*
+		This getBlock() check if position is inside the world
+	*/
 	WorldBlock getBlock(Vec3f position) const
 	{
-		uint[3] p = floatToUintCoord(position);
-		return root.getBlock(p[0], p[1], p[2]);
+		foreach (i; 0 .. 3) {
+			if (position[i] < min[i] || position[i] > max[i]) {
+				return WorldBlock();
+			}
+		}
+		return root.getBlock(cast(uint) position.x, cast(uint) position.y, cast(uint) position.z);
 	}
 
 	uint[3] floatToUintCoord(Vec3f vector) const
 	{
-		foreach (i; 0..3) vector[i] = fmax(fmin(vector[i], max[i]), min[i]);
+		foreach (i; 0 .. 3) vector[i] = fmax(fmin(vector[i], max[i]), min[i]);
 		return [cast(uint) vector.x, cast(uint) vector.y, cast(uint) vector.z];
 	}
 
@@ -366,7 +373,7 @@ struct World
 		}
 		auto file = File(filename, "wb");
 		file.rawWrite(startPosition.array);
-		file.rawWrite((&depth)[0..1]);
+		file.rawWrite((&depth)[0 .. 1]);
 		root.recursiveSave(file);
 		file.close();
 	}
@@ -374,7 +381,7 @@ struct World
 	void load(File file)
 	{
 		file.rawRead(startPosition.array);
-		file.rawRead((&depth)[0..1]);
+		file.rawRead((&depth)[0 .. 1]);
 		init();
 		root.recursiveLoad(file);
 	}

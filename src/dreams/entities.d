@@ -19,6 +19,7 @@ struct Player
 	}
 
 	uint flags;
+	float speed = 10;
 	Vec3f position = Vec3f(0, 0, 0);
 	Vec3f forward = Vec3f(0, 0, -1); // normalized
 	float fallingTime = 0;
@@ -27,59 +28,58 @@ struct Player
 	{
 		Vec3f distance = computeVelocity() * time;
 
-		// collision test with the world
-		float d = 0.5f;
-		WorldBlock b0, b1, b2, b3;
 		Vec3f newPosition = position;
-		// x
-		if (distance.x != 0) {
-			newPosition.x += distance.x;
-			d = copysign(d, distance.x);
-			b0 = world.getBlock(newPosition + Vec3f(d, 0.3f, 0));
-			b1 = world.getBlock(newPosition + Vec3f(d, -0.7f, 0));
-			b2 = world.getBlock(newPosition + Vec3f(d, -1.7f, 0));
-			b3 = world.getBlock(newPosition + Vec3f(d, -2.7f, 0));
-			if (b1.isOpaque() || b2.isOpaque() || b3.isOpaque()) {
-				newPosition.x = position.x;
-				// pass over obstacles
-				if (b0.isTransparent() && b1.isTransparent() && b2.isTransparent() && b3.isOpaque()) {
-					distance.y += 0.2f;
-				}
-			}
-		}
-		// z
-		if (distance.z != 0) {
-			newPosition.z += distance.z;
-			d = copysign(d, distance.z);
-			b0 = world.getBlock(newPosition + Vec3f(0, 0.3f, d));
-			b1 = world.getBlock(newPosition + Vec3f(0, -0.7f, d));
-			b2 = world.getBlock(newPosition + Vec3f(0, -1.7f, d));
-			b3 = world.getBlock(newPosition + Vec3f(0, -2.7f, d));
-			if (b1.isOpaque() || b2.isOpaque() || b3.isOpaque()) {
-				newPosition.z = position.z;
-				// pass over obstacles
-				if (b0.isTransparent() && b1.isTransparent() && b2.isTransparent() && b3.isOpaque()) {
-					distance.y += 0.2f;
-				}
-			}
-		}
-		// y
-		newPosition.y += distance.y;
-		b0 = world.getBlock(newPosition + Vec3f(0, 0, 0));
-		b1 = world.getBlock(newPosition + Vec3f(0, -2.7f, 0));
-		if (b0.isOpaque() || b1.isOpaque()) {
-			newPosition.y = position.y;
-			fallingTime = 0;
-		} else {
-			if (distance.y <= 0) {
-				fallingTime += time;
-				fallingTime = fmin(fallingTime, maxFallingTime);
-			}
-		}
-
-		// noclip
 		if (flags & Flag.noclip) {
 			newPosition += distance;
+		} else {
+			// collision test with the world
+			float d = 0.5f;
+			WorldBlock b0, b1, b2, b3;
+			// x
+			if (distance.x != 0) {
+				newPosition.x += distance.x;
+				d = copysign(d, distance.x);
+				b0 = world.getBlock(newPosition + Vec3f(d, 0.3f, 0));
+				b1 = world.getBlock(newPosition + Vec3f(d, -0.7f, 0));
+				b2 = world.getBlock(newPosition + Vec3f(d, -1.7f, 0));
+				b3 = world.getBlock(newPosition + Vec3f(d, -2.7f, 0));
+				if (b1.isOpaque() || b2.isOpaque() || b3.isOpaque()) {
+					newPosition.x = position.x;
+					// pass over obstacles
+					if (b0.isTransparent() && b1.isTransparent() && b2.isTransparent() && b3.isOpaque()) {
+						distance.y += 0.2f;
+					}
+				}
+			}
+			// z
+			if (distance.z != 0) {
+				newPosition.z += distance.z;
+				d = copysign(d, distance.z);
+				b0 = world.getBlock(newPosition + Vec3f(0, 0.3f, d));
+				b1 = world.getBlock(newPosition + Vec3f(0, -0.7f, d));
+				b2 = world.getBlock(newPosition + Vec3f(0, -1.7f, d));
+				b3 = world.getBlock(newPosition + Vec3f(0, -2.7f, d));
+				if (b1.isOpaque() || b2.isOpaque() || b3.isOpaque()) {
+					newPosition.z = position.z;
+					// pass over obstacles
+					if (b0.isTransparent() && b1.isTransparent() && b2.isTransparent() && b3.isOpaque()) {
+						distance.y += 0.2f;
+					}
+				}
+			}
+			// y
+			newPosition.y += distance.y;
+			b0 = world.getBlock(newPosition + Vec3f(0, 0, 0));
+			b1 = world.getBlock(newPosition + Vec3f(0, -2.7f, 0));
+			if (b0.isOpaque() || b1.isOpaque()) {
+				newPosition.y = position.y;
+				fallingTime = 0;
+			} else {
+				if (distance.y <= 0) {
+					fallingTime += time;
+					fallingTime = fmin(fallingTime, maxFallingTime);
+				}
+			}
 		}
 
 		// update position
@@ -113,7 +113,6 @@ struct Player
 			velocity += Vec3f(0, -g * fallingTime, 0);
 		}
 
-		immutable float speed = 10;
 		immutable auto up = Vec3f(0, 1, 0);
 		Vec3f v = Vec3f(0, 0, 0);
 		if (flags & Flag.forward) {
