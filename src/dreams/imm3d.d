@@ -42,18 +42,25 @@ public:
 		this.view = view;
 	}
 
-	void setColor(byte r, byte g, byte b, byte a = 127)
+	void setColor()(auto const ref Vec4f color)
 	{
-		this.color[0] = r;
-		this.color[1] = g;
-		this.color[2] = b;
-		this.color[3] = a;
+		this.color[0] = cast(byte) (color[0] * byte.max);
+		this.color[1] = cast(byte) (color[1] * byte.max);
+		this.color[2] = cast(byte) (color[2] * byte.max);
+		this.color[3] = cast(byte) (color[3] * byte.max);
+	}
+
+	void setColor(const ref byte[4] color)
+	{
+		this.color = color;
 	}
 
 	void setTexture(Texture texture)
 	{
-		flush();
-		this.texture = texture;
+		if (this.texture != texture) {
+			flush();
+			this.texture = texture;
+		}
 	}
 
 	void drawBasis(Vec3f position)
@@ -61,17 +68,37 @@ public:
 		setTexture(0);
 		setWireframe();
 		with (position) {
-			setColor(127, 0, 0);
+			setColor(red);
 			Index i0 = addVertex(x, y, z);
 			Index i1 = addVertex(x + 1, y, z);
-			setColor(0, 127, 0);
+			setColor(blue);
 			Index i2 = addVertex(x, y, z);
 			Index i3 = addVertex(x, y + 1, z);
-			setColor(0, 0, 127);
+			setColor(green);
 			Index i4 = addVertex(x, y, z);
 			Index i5 = addVertex(x, y, z + 1);
 			mesh.indices ~= [i0, i0, i1, i2, i2, i3, i4, i4, i5];
 		}
+	}
+
+	void drawBlock(float x0, float y0, float z0, float x1, float y1, float z1)
+	{
+		setTexture(0);
+		unsetWireframe();
+		Index i0 = addVertex(x0, y0, z0);
+		Index i1 = addVertex(x1, y0, z0);
+		Index i2 = addVertex(x1, y0, z1);
+		Index i3 = addVertex(x0, y0, z1);
+		Index i4 = addVertex(x0, y1, z0);
+		Index i5 = addVertex(x1, y1, z0);
+		Index i6 = addVertex(x1, y1, z1);
+		Index i7 = addVertex(x0, y1, z1);
+		Index blockIndices[36] = [
+			i0, i3, i7, i7, i4, i0, i1, i5, i6, i6, i2, i1,
+			i0, i1, i2, i2, i3, i0, i4, i7, i6, i6, i5, i4,
+			i0, i4, i5, i5, i1, i0, i3, i2, i6, i6, i7, i3
+		];
+		mesh.indices ~= blockIndices;
 	}
 
 	void drawWireframeBlock(float x0, float y0, float z0, float x1, float y1, float z1)
@@ -142,8 +169,7 @@ public:
 		mesh.clear();
 	}
 
-private:
-	void setWireframe()
+	private void setWireframe()
 	{
 		if (!wireframe) {
 			flush();
@@ -151,7 +177,7 @@ private:
 		}
 	}
 
-	void unsetWireframe()
+	private void unsetWireframe()
 	{
 		if (wireframe) {
 			flush();

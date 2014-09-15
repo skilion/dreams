@@ -342,8 +342,8 @@ struct World
 					face = [0, 0, -stepZ];
 				}
 			}
+			i++;
 		}
-		i++;
 		return false;
 	}
 

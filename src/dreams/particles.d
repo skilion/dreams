@@ -23,6 +23,7 @@ struct Particle
 	float duration;
 	Vec3f velocity;
 	Vec3f position;
+	byte[4] color;
 }
 
 final class ParticleSystem
@@ -97,8 +98,8 @@ final class ParticleSystem
 	void draw(Immediate3D imm)
 	{
 		imm.setTexture(0);
-		imm.setColor(40, 127, 0);
 		foreach (ref particle; particles) {
+			imm.setColor(particle.color);
 			imm.drawBillboard(particle.position, 0.05, 0.05);
 		}
 	}
@@ -109,6 +110,7 @@ final class ParticleSystem
 		p.duration = uniform!"[]"(emitter.minDuration, emitter.maxDuration, rnd);
 		p.velocity = emitter.velocity;
 		p.position = randomPoint(emitter.position, emitter.minSize, emitter.maxSize);
+		p.color = [127, 0, 0, 127];
 		return p;
 	}
 

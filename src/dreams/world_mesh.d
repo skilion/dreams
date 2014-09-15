@@ -203,8 +203,8 @@ private int vertexAmbientOcclusion(int vertex, const ref WorldBlock[27] near)
 
 // mesh of a single block
 private enum tileSize = ushort.max / 16;
-private enum a = 4;
-private enum b = tileSize - 4;
+private enum a = 16;
+private enum b = tileSize - 16;
 private immutable Vertex[24] blockVertices = [
 	// left
 	{[0, 0, 0], [-128, 0, 0, 0], [a, a], [127, 127, 127, 127]},

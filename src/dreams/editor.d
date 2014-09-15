@@ -11,7 +11,8 @@ final class Editor
 
 	private WorldNode* root;
 	private Action[] undoActions, redoActions;
-	Action clipboard;
+	private uint[3] clipboardSize;
+	private WorldBlock[] clipboard;
 
 	this(WorldNode* root)
 	{
@@ -33,32 +34,31 @@ final class Editor
 
 	void copy(const ref uint[3] min, const ref uint[3] max)
 	{
-		clipboard.min = min;
-		clipboard.max = max;
-		read(min, max, clipboard.blocks);
+		clipboardSize = max;
+		clipboardSize[] -= min[];
+		read(min, max, clipboard);
+	}
+
+	void paste(const ref uint[3] pos)
+	{
+		uint[3] max = clipboardSize;
+		max[] += pos[];
+		write(pos, max, clipboard);
 	}
 
 	void undo()
 	{
 		if (undoActions.length > 0) {
-			redoActions ~= backup(undoActions[0].min, undoActions[0].max);
+			redoActions ~= backup(undoActions[$ - 1].min, undoActions[$ - 1].max);
 			restore(undoActions[$ - 1]);
 			undoActions.length--;
 		}
 	}
 
-	void paste(const ref uint[3] pos)
-	{
-		uint[3] min = pos, max = pos;
-		min[] += clipboard.min[];
-		max[] += clipboard.max[];
-		write(min, max, clipboard.blocks);
-	}
-
 	void redo()
 	{
 		if (redoActions.length > 0) {
-			undoActions ~= backup(redoActions[0].min, redoActions[0].max);
+			undoActions ~= backup(redoActions[$ - 1].min, redoActions[$ - 1].max);
 			restore(redoActions[$ - 1]);
 			redoActions.length--;
 		}
@@ -78,7 +78,7 @@ final class Editor
 		return action;
 	}
 
-	private void read(const ref uint[3] min, const ref uint[3] max, WorldBlock[] blocks)
+	private void read(const ref uint[3] min, const ref uint[3] max, ref WorldBlock[] blocks)
 	{
 		int n = 0;
 		blocks.length = (max[0] - min[0]) * (max[1] - min[1]) * (max[2] - min[2]);

@@ -234,5 +234,6 @@
   <File path="src\shaders.d" />
   <File path="src\signals.d" />
   <File path="src\vector.d" />
+  <File path="src\zfile.d" />
  </Folder>
 </DProject>

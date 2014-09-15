@@ -9,24 +9,19 @@ import log, matrix, renderer, vector;
 
 final class Demo: Engine
 {
-private:
-	GraphicsContext ctx;
-	Font smallFont;
-	Font defaultFont;
-	Immediate3D imm;
+	private GraphicsContext ctx;
+	private Font smallFont, defaultFont;
+	private Immediate3D imm;
 
-	World* world;
-	WorldRenderer worldRenderer;
-	Skybox skybox;
+	private World world;
+	private WorldRenderer worldRenderer;
+	private Skybox skybox;
 
-	Player player;
-	FpsCamera camera;
+	private Player player;
+	private FpsCamera camera;
 	
-	EffectSystem ef;
-	ParticleSystem ps;
-
-	Sound mainMusic;
-	Source mainMusicSource;
+	private EffectSystem ef;
+	private ParticleSystem ps;
 
 	enum State {
 		edit,
@@ -34,30 +29,33 @@ private:
 	}
 	State state;
 
-	// demo advancement
-	float cumulativeTime = 0;
-	int demoState = 0;
+	// demo variables
+	private {
+		Sound mainMusic;
+		Source mainMusicSource;
+		float cumulativeTime = 0;
+		int demoState = 0;
+	}
 
 	// editor variables
-	enum SelectionMode {
-		add,
-		fixedDistance,
-		ray,
-		paint
+	private {
+		enum EditMode {
+			add,
+			select,
+			paint
+		}
+		Editor editor;
+		EditMode editMode;
+		ubyte textureId;
+		bool selecting;
+		byte ctrl; // true if ctrl is pressed
+		uint[3] point; // where the player is pointing
+		uint[3] selectionStart, selectionEnd;
 	}
-	Editor editor;
-	ubyte textureId;
-	bool selecting;
-	byte ctrl; // true if ctrl is pressed
-	SelectionMode selectionMode;
-	uint[3] selectionStart, selectionEnd;
 
-	bool renderingComplete;
-
-public:
 	this()
 	{
-		super("d-voxel");
+		super("We're Made Of Dreams");
 		ctx = new GraphicsContext(super.renderer);
 		imm = new Immediate3D(super.renderer);
 		worldRenderer = new WorldRenderer(super.renderer);
@@ -67,15 +65,18 @@ public:
 
 	~this()
 	{
+		destroy(ps);
+		destroy(ef);
 		destroy(worldRenderer);
+		destroy(imm);
 		destroy(ctx);
 	}
 
 	override void init()
 	{
 		super.init();
-		imm.init();
 		ctx.init();
+		imm.init();
 		worldRenderer.init();
 		skybox.init(renderer);
 
@@ -94,15 +95,16 @@ public:
 		ef.push(new Blank(ctx, black, 1000));
 
 		player.position = Vec3f(128, 515, 10);
-		world = new World(5);
+		load("world.raw");
+		/*world = new World(5);
 		enum uint a = 512 - 32;
 		enum uint b = 512 + 32;
 		for (uint x = 128; x < 128 + 15; x++) {
-			for (uint z = 0; z < 1024; z++) {
+			for (uint z = 0; z < 400; z++) {
 				if ((x == 128 + 7) && (z % 4 != 3)) world.root.insertBlock(WorldBlock(1, 33), x, 512, z);
 				else world.root.insertBlock(WorldBlock(1, 32), x, 512, z);
 			}
-		}
+		}*/
 
 		worldRenderer.setWorldRoot(world.root);
 		editor = new Editor(world.root);
@@ -112,15 +114,18 @@ public:
 
 	override void shutdown()
 	{
+		destroy(editor);
+		destroy(world);
+		ctx.destroyFont(defaultFont);
+		ctx.destroyFont(smallFont);
+
 		input.disconnect(&onKeyEvent);
 		input.disconnect(&onMouseButtonEvent);
 		input.disconnect(&camera.onPointerMoveEvent);
 		skybox.shutdown();
 		worldRenderer.shutdown();
-		destroy(world);
-		ctx.destroyFont(smallFont);
-		ctx.shutdown();
 		imm.shutdown();
+		ctx.shutdown();
 		super.shutdown();
 	}
 
@@ -129,7 +134,7 @@ public:
 		int width, height; bool fullscreen;
 		renderer.getDisplayMode(width, height, fullscreen);
 		View view;
-		view.fov = 60 * PI / 180;
+		view.fov = 80 * PI / 180;
 		view.aspect = width / cast(float) height;
 		view.near = 0.1;
 		view.far = 100;
@@ -155,10 +160,9 @@ public:
 		// editor
 		if (state == State.edit) {
 			// world limits
-			imm.setColor(127, 0, 0);
+			imm.setColor(white);
 			imm.drawWireframeBlock(0, 0, 0, 1024, 1024, 1024);
 			// selection box
-			imm.setColor(127, 127, 127);
 			Vec3f a, b;
 			foreach (i; 0 .. 3) {
 				if (selectionStart[i] < selectionEnd[i]) {
@@ -169,15 +173,18 @@ public:
 					b[i] = selectionStart[i] + 1.01f;
 				}
 			}
+			imm.setColor(blue);
 			imm.drawWireframeBlock(a.x, a.y, a.z, b.x, b.y, b.z);
-			imm.drawBasis(Vec3f(512, 512, 512));
+			imm.setColor(Vec4f(0.3f, 0.3f, 0.8f, 0.5f));
+			imm.drawBlock(a.x, a.y, a.z, b.x, b.y, b.z);
+			a += 0.51f;
+			imm.drawBasis(a);
 		}
 
 		// user interface
 		drawUI();
 
 		ctx.flush();
-		renderingComplete = true;
 	}
 
 	override void update(float time)
@@ -188,39 +195,18 @@ public:
 
 		camera.update();
 		player.forward = camera.forward;
-		player.update(time, world);
+		player.update(time, &world);
 
 		if (state == State.edit) {
-			// selection box
+			// selection
+			uint[3] face;
+			uint distance = (editMode == EditMode.select) ? 128 : 32;
+			world.rayCollisionTest(player.position, player.forward, distance, point, face);
+			if (editMode == EditMode.add) point[] += face[];
 			if (selecting) {
-				final switch (selectionMode) {
-					case SelectionMode.add:
-						break;
-					case SelectionMode.paint:
-						uint[3] point, face;
-						if (world.rayCollisionTest(player.position, player.forward, 64, point, face)) {
-							selectionEnd = point;
-						}
-						break;
-					case SelectionMode.ray:
-					case SelectionMode.fixedDistance:
-						selectionEnd = getFixedPointingPosition();
-						break;
-				}
+				selectionEnd = point;
 			} else {
-				final switch (selectionMode) {
-				case SelectionMode.add:
-				case SelectionMode.ray:
-				case SelectionMode.paint:
-					uint[3] point, face;
-					world.rayCollisionTest(player.position, player.forward, 64, point, face);
-					if (selectionMode != SelectionMode.paint) point[] += face[];
-					selectionStart = selectionEnd = point;
-					break;
-				case SelectionMode.fixedDistance:
-					selectionStart = selectionEnd = getFixedPointingPosition();
-					break;
-				}
+				if (editMode != EditMode.select) selectionStart = selectionEnd = point;
 			}
 		}
 	}
@@ -249,25 +235,42 @@ public:
 
 		if (state == State.edit) {
 			switch (keyEvent.symbol) {
-			case KeySymbol.k_e: // change selection mode
+			case KeySymbol.k_e: // change edit mode
 				if (keyEvent.type == KeyEvent.Type.press) {
-					selectionMode++;
-					if (selectionMode > SelectionMode.max) {
-						selectionMode = SelectionMode.min;
+					editMode++;
+					if (editMode > EditMode.max) {
+						editMode = EditMode.min;
 					}
+				}
+				break;
+			case KeySymbol.k_space: // increase speed
+				if (keyEvent.type == KeyEvent.Type.press) {
+					player.speed = 50;
+				} else {
+					player.speed = 10;
+				}
+				break;
+			case KeySymbol.k_delete: // copy
+				if (keyEvent.type == KeyEvent.Type.press) {
+					uint[3] min, max;
+					selectionToMinMax(min, max);
+					editor.edit(min, max, WorldBlock());
 				}
 				break;
 			case KeySymbol.k_c: // copy
 				if (keyEvent.type == KeyEvent.Type.press && ctrl) {
-					// editor.copy();
+					uint[3] min, max;
+					selectionToMinMax(min, max);
+					editor.copy(min, max);
 				}
 				break;
 			case KeySymbol.k_v: // paste
 				if (keyEvent.type == KeyEvent.Type.press && ctrl) {
-					// editor.paste();
+					editor.paste(selectionStart);
 				}
 				break;
 			case KeySymbol.k_z: // undo
+			case KeySymbol.k_backspace: // undo
 				if (keyEvent.type == KeyEvent.Type.press && ctrl) {
 					editor.undo();
 				}
@@ -292,20 +295,22 @@ public:
 			case KeySymbol.k_f5: // save
 				if (keyEvent.type == KeyEvent.Type.release) {
 					world.save("world.raw");
+					dev("world saved");
 				}
 				break;
 			case KeySymbol.k_f8: // load
 				if (keyEvent.type == KeyEvent.Type.release) {
 					load("world.raw");
+					dev("world loaded");
 				}
 				break;
-			case KeySymbol.k_f11: // new world
+			/*case KeySymbol.k_f11: // new world
 				if (keyEvent.type == KeyEvent.Type.release) {
 					world = new World(5);
 					worldRenderer.setWorldRoot(world.root);
 					editor = new Editor(world.root);
 				}
-				break;
+				break;*/
 			case KeySymbol.k_lctrl:
 				if (keyEvent.type == KeyEvent.Type.release) ctrl = false;
 				else ctrl = true;
@@ -321,34 +326,20 @@ public:
 			if (event.button == MouseButton.left) {
 				if (event.type == MouseButtonEvent.Type.press) {
 					selecting = true;
-				} else {
-					uint[3] min, max;
-					selectionToMinMax(min, max);
-					for (uint x = min[0]; x <= max[0]; x++) {
-						for (uint y = min[1]; y <= max[1]; y++) {
-							for (uint z = min[2]; z <= max[2]; z++) {
-								world.root.insertBlock(WorldBlock(1, textureId), x, y, z);
-							}
-						}
+					if (editMode == EditMode.select) {
+						selectionStart = selectionEnd = point;
 					}
+				} else {
 					selecting = false;
+					if (editMode == EditMode.add || editMode == EditMode.paint) {
+						uint[3] min, max;
+						selectionToMinMax(min, max);
+						editor.edit(min, max, WorldBlock(1, textureId));
+					}
 				}
 			}
-			if (event.button == MouseButton.right) {
-				if (event.type == MouseButtonEvent.Type.press) {
-					selecting = true;
-				} else {
-					uint[3] min, max;
-					selectionToMinMax(min, max);
-					for (uint x = min[0]; x <= max[0]; x++) {
-						for (uint y = min[1]; y <= max[1]; y++) {
-							for (uint z = min[2]; z <= max[2]; z++) {
-								world.root.insertBlock(WorldBlock(0), x, y, z);
-							}
-						}
-					}
-					selecting = false;
-				}
+			if (event.button == MouseButton.middle) {
+				textureId = world.root.getBlock(point[0], point[1], point[2]).data0;
 			}
 			if (event.button == MouseButton.scrollUp) {
 				if (textureId < 255) textureId++;
@@ -431,6 +422,8 @@ public:
 		world.load(file);
 		worldRenderer.destroyAllMeshes();
 		worldRenderer.setWorldRoot(world.root);
+		destroy(editor);
+		editor = new Editor(world.root);
 	}
 
 	private void drawUI()
@@ -454,9 +447,9 @@ public:
 		renderer.getDisplayMode(width, height, fullscreen);
 		// help
 		ctx.pushClipRect(10, height - 90, 1000, 90);
-		drawUIStringSmall("E = change pointing mode (" ~ to!string(selectionMode) ~ ")", 0, 0);
-		drawUIStringSmall("F2 = reset renderer    F3 = toggle fly", 0, 25);
-		drawUIStringSmall("F5 = save    F8 = load", 0, 50);
+		drawUIStringSmall("E = change edit mode (" ~ to!string(editMode) ~ ")", 0, 0);
+		drawUIStringSmall("SPACE = increase speed", 0, 25);
+		drawUIStringSmall("F2 = reset renderer    F3 = toggle fly    F5 = save    F8 = load", 0, 50);
 		ctx.popClipRect();
 		// texture
 		immutable float tileSize = 16 / 256.0f;
@@ -500,10 +493,10 @@ public:
 		foreach (i; 0 .. 3) {
 			if (selectionStart[i] < selectionEnd[i]) {
 				min[i] = selectionStart[i];
-				max[i] = selectionEnd[i];
+				max[i] = selectionEnd[i] + 1;
 			} else {
 				min[i] = selectionEnd[i];
-				max[i] = selectionStart[i];
+				max[i] = selectionStart[i] + 1;
 			}
 		}
 	}
