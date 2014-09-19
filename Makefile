@@ -7,6 +7,7 @@ SOURCES = \
 	src/dreams/camera.d \
 	src/dreams/culling.d \
 	src/dreams/demo.d \
+	src/dreams/editor.d \
 	src/dreams/entities.d \
 	src/dreams/effects.d \
 	src/dreams/imm3d.d \
@@ -38,7 +39,8 @@ SOURCES = \
 	src/renderer.d \
 	src/shaders.d \
 	src/signals.d \
-	src/vector.d
+	src/vector.d \
+	src/zfile.d
 
 dreams: $(SOURCES)
 	$(DC) $(DFLAGS) $(SOURCES)

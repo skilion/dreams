@@ -323,7 +323,7 @@ public:
 
 	void destroyTextures(Texture[] texture)
 	{
-		glDeleteTextures(texture.length, texture.ptr);
+		glDeleteTextures(cast(GLsizei) texture.length, texture.ptr);
 	}
 
 	void draw(IndexBuffer indexBuffer, int indexCount, VertexBuffer vertexBuffer)
