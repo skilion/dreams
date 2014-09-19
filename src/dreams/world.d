@@ -1,7 +1,7 @@
 module dreams.world;
 
-import std.algorithm, std.stdio, std.file, std.math;
-import renderer, vector;
+import std.algorithm, std.file, std.math, std.typecons;
+import renderer, vector, zfile;
 
 struct WorldBlock
 {
@@ -192,7 +192,7 @@ struct WorldNode
 		return shrink;
 	}
 
-	private void recursiveSave(File file) const
+	private void recursiveSave(ZOutFile file) const
 	{
 		file.rawWrite((&level)[0..1]);
 		file.rawWrite(center.array);
@@ -214,7 +214,7 @@ struct WorldNode
 		}
 	}
 
-	private void recursiveLoad(File file)
+	private void recursiveLoad(ZInFile file)
 	{
 		file.rawRead((&level)[0..1]);
 		file.rawRead(center.array);
@@ -402,18 +402,20 @@ struct World
 
 	void save(string filename) const
 	{
-		if (exists(filename)) {
-			rename(filename, filename ~ ".backup");
-		}
-		auto file = File(filename, "wb");
+		auto file = scoped!ZOutFile(filename ~ "__");
 		file.rawWrite(startPosition.array);
 		file.rawWrite((&depth)[0 .. 1]);
 		root.recursiveSave(file);
 		file.close();
+		if (exists(filename)) {
+			rename(filename, filename ~ ".backup");
+		}
+		rename(filename ~ "__", filename);
 	}
 
-	void load(File file)
+	void load(string filename)
 	{
+		auto file = scoped!ZInFile(filename);
 		file.rawRead(startPosition.array);
 		file.rawRead((&depth)[0 .. 1]);
 		init();

@@ -7,6 +7,8 @@ import dreams.view, dreams.world, dreams.world_renderer;
 import audio, cstr, engine, graphics, input;
 import log, matrix, renderer, vector;
 
+private immutable wordFilename = "world.z";
+
 final class Demo: Engine
 {
 	private GraphicsContext ctx;
@@ -97,12 +99,12 @@ final class Demo: Engine
 		player.position = Vec3f(135.5f, 516, 0.5f);
 		freeCamera.yaw = 180 * PI / 180;
 
-		load("world.raw");
+		load(wordFilename);
 		worldRenderer.setWorldRoot(world.root);
 		editor = new Editor(world.root);
 
 		// --------------------------
-		setState(State.playing);
+		setState(State.edit);
 		// --------------------------
 
 		// start with a black screen
@@ -111,6 +113,9 @@ final class Demo: Engine
 		// setting the demo camera in advance gives time to worldRenderer to generate the chunks
 		camera.position = Vec3f(135.5f, 516, 0.5f);
 		camera.yaw = 180 * PI / 180;
+
+		// run gc before starting
+		core.memory.GC.collect();
 	}
 
 	override void shutdown()
@@ -316,13 +321,13 @@ final class Demo: Engine
 			break;
 		case KeySymbol.k_f5: // save
 			if (keyEvent.type == KeyEvent.Type.release) {
-				world.save("world.raw");
+				world.save(wordFilename);
 				dev("world saved");
 			}
 			break;
 		case KeySymbol.k_f8: // load
 			if (keyEvent.type == KeyEvent.Type.release) {
-				load("world.raw");
+				load(wordFilename);
 				dev("world loaded");
 			}
 			break;
@@ -450,8 +455,7 @@ final class Demo: Engine
 
 	private void load(string filename)
 	{
-		auto file = File(filename, "rb");
-		world.load(file);
+		world.load(filename);
 		worldRenderer.destroyAllMeshes();
 		worldRenderer.setWorldRoot(world.root);
 		destroy(editor);
