@@ -18,7 +18,8 @@ final class Demo: Engine
 	private Skybox skybox;
 
 	private Player player;
-	private FpsCamera camera;
+	private FpsCamera freeCamera;
+	private ControlledFpsCamera camera;
 	
 	private EffectSystem ef;
 	private ParticleSystem ps;
@@ -82,6 +83,7 @@ final class Demo: Engine
 
 		input.connect(&onKeyEvent);
 		input.connect(&onMouseButtonEvent);
+		input.connect(&freeCamera.onPointerMoveEvent);
 		input.connect(&camera.onPointerMoveEvent);
 
 		smallFont = ctx.createFont("FSEX300.ttf", 12, false);
@@ -91,25 +93,24 @@ final class Demo: Engine
 		mainMusicSource = audio.getSource();
 		mainMusicSource.setSound(mainMusic);
 
-		// start with a black screen
-		ef.push(new Blank(ctx, black, 1000));
+		// editor camera
+		player.position = Vec3f(135.5f, 516, 0.5f);
+		freeCamera.yaw = 180 * PI / 180;
 
-		player.position = Vec3f(128, 515, 10);
 		load("world.raw");
-		/*world = new World(5);
-		enum uint a = 512 - 32;
-		enum uint b = 512 + 32;
-		for (uint x = 128; x < 128 + 15; x++) {
-			for (uint z = 0; z < 400; z++) {
-				if ((x == 128 + 7) && (z % 4 != 3)) world.root.insertBlock(WorldBlock(1, 33), x, 512, z);
-				else world.root.insertBlock(WorldBlock(1, 32), x, 512, z);
-			}
-		}*/
-
 		worldRenderer.setWorldRoot(world.root);
 		editor = new Editor(world.root);
 
-		setState(State.edit);
+		// --------------------------
+		setState(State.playing);
+		// --------------------------
+
+		// start with a black screen
+		if (state == State.playing) ef.push(new Blank(ctx, black, 1000));
+
+		// setting the demo camera in advance gives time to worldRenderer to generate the chunks
+		camera.position = Vec3f(135.5f, 516, 0.5f);
+		camera.yaw = 180 * PI / 180;
 	}
 
 	override void shutdown()
@@ -121,6 +122,7 @@ final class Demo: Engine
 
 		input.disconnect(&onKeyEvent);
 		input.disconnect(&onMouseButtonEvent);
+		input.disconnect(&freeCamera.onPointerMoveEvent);
 		input.disconnect(&camera.onPointerMoveEvent);
 		skybox.shutdown();
 		worldRenderer.shutdown();
@@ -137,9 +139,17 @@ final class Demo: Engine
 		view.fov = 80 * PI / 180;
 		view.aspect = width / cast(float) height;
 		view.near = 0.1;
-		view.far = 100;
-		view.position = player.position;
-		view.forward = player.forward;
+		view.far = 200;
+		final switch (state) {
+		case State.edit:
+			view.position = player.position;
+			view.forward = player.forward;
+			break;
+		case State.playing:
+			view.position = camera.position;
+			view.forward = camera.forward;
+			break;
+		}
 		view.side = view.forward.cross(Vec3f(0, 1, 0)).normalize();
 		view.up = view.side.cross(view.forward);
 		view.computeViewProjectionMatrix();
@@ -152,7 +162,6 @@ final class Demo: Engine
 		// entities
 		imm.setView(view);
 		ps.draw(imm);
-		imm.flush();
 
 		// 2D effects
 		ef.draw();
@@ -179,29 +188,33 @@ final class Demo: Engine
 			imm.drawBlock(a.x, a.y, a.z, b.x, b.y, b.z);
 			a += 0.51f;
 			imm.drawBasis(a);
+			// user interface
+			drawUI();
 		}
-
-		// user interface
-		drawUI();
-
+		imm.flush();
 		ctx.flush();
 	}
 
 	override void update(float time)
 	{
-		demoManager(time);
+		final switch (state) {
+		case State.edit:
+			freeCamera.update();
+			player.forward = freeCamera.forward;
+			player.update(time, &world);
+			break;
+		case State.playing:
+			demoManager(time);
+			camera.update(time);
+			break;
+		}
 		ps.update(time);
 		ef.update(time);
-
-		camera.update();
-		player.forward = camera.forward;
-		player.update(time, &world);
 
 		if (state == State.edit) {
 			// selection
 			uint[3] face;
-			uint distance = (editMode == EditMode.select) ? 128 : 32;
-			world.rayCollisionTest(player.position, player.forward, distance, point, face);
+			world.rayCollisionTest(player.position, player.forward, 32, point, face);
 			if (editMode == EditMode.add) point[] += face[];
 			if (selecting) {
 				selectionEnd = point;
@@ -213,6 +226,9 @@ final class Demo: Engine
 
 	void onKeyEvent(const KeyEvent* keyEvent)
 	{
+		if (state == State.playing) return; // nothing to do
+
+		// free camera movement
 		switch (keyEvent.symbol) {
 		case KeySymbol.k_w:
 			if (keyEvent.type == KeyEvent.Type.press) player.setFlag(Player.Flag.forward);
@@ -233,132 +249,136 @@ final class Demo: Engine
 		default:
 		}
 
-		if (state == State.edit) {
-			switch (keyEvent.symbol) {
-			case KeySymbol.k_e: // change edit mode
-				if (keyEvent.type == KeyEvent.Type.press) {
-					editMode++;
-					if (editMode > EditMode.max) {
-						editMode = EditMode.min;
-					}
+		switch (keyEvent.symbol) {
+		case KeySymbol.k_e: // change edit mode
+			if (keyEvent.type == KeyEvent.Type.press) {
+				editMode++;
+				if (editMode > EditMode.max) {
+					editMode = EditMode.min;
 				}
-				break;
-			case KeySymbol.k_space: // increase speed
-				if (keyEvent.type == KeyEvent.Type.press) {
-					player.speed = 50;
-				} else {
-					player.speed = 10;
-				}
-				break;
-			case KeySymbol.k_delete: // copy
-				if (keyEvent.type == KeyEvent.Type.press) {
-					uint[3] min, max;
-					selectionToMinMax(min, max);
-					editor.edit(min, max, WorldBlock());
-				}
-				break;
-			case KeySymbol.k_c: // copy
-				if (keyEvent.type == KeyEvent.Type.press && ctrl) {
-					uint[3] min, max;
-					selectionToMinMax(min, max);
-					editor.copy(min, max);
-				}
-				break;
-			case KeySymbol.k_v: // paste
-				if (keyEvent.type == KeyEvent.Type.press && ctrl) {
-					editor.paste(selectionStart);
-				}
-				break;
-			case KeySymbol.k_z: // undo
-			case KeySymbol.k_backspace: // undo
-				if (keyEvent.type == KeyEvent.Type.press && ctrl) {
-					editor.undo();
-				}
-				break;
-			case KeySymbol.k_y: // redo
-				if (keyEvent.type == KeyEvent.Type.press && ctrl) {
-					editor.redo();
-				}
-				break;
-			case KeySymbol.k_f2: // reset renderer
-				if (keyEvent.type == KeyEvent.Type.press) {
-					import core.memory;
-					GC.collect();
-					worldRenderer.destroyAllMeshes();
-				}
-				break;
-			case KeySymbol.k_f3: // toggle fly
-				if (keyEvent.type == KeyEvent.Type.press) {
-					player.flags ^= Player.Flag.noclip;
-				}
-				break;
-			case KeySymbol.k_f5: // save
-				if (keyEvent.type == KeyEvent.Type.release) {
-					world.save("world.raw");
-					dev("world saved");
-				}
-				break;
-			case KeySymbol.k_f8: // load
-				if (keyEvent.type == KeyEvent.Type.release) {
-					load("world.raw");
-					dev("world loaded");
-				}
-				break;
-			/*case KeySymbol.k_f11: // new world
-				if (keyEvent.type == KeyEvent.Type.release) {
-					world = new World(5);
-					worldRenderer.setWorldRoot(world.root);
-					editor = new Editor(world.root);
-				}
-				break;*/
-			case KeySymbol.k_lctrl:
-				if (keyEvent.type == KeyEvent.Type.release) ctrl = false;
-				else ctrl = true;
-				break;
-			default:
 			}
+			break;
+		case KeySymbol.k_space: // increase speed
+			if (keyEvent.type == KeyEvent.Type.press) {
+				player.speed = 50;
+			} else {
+				player.speed = 10;
+			}
+			break;
+		case KeySymbol.k_r: // fill with procedural content
+			if (keyEvent.type == KeyEvent.Type.press) {
+				uint[3] min, max;
+				selectionToMinMax(min, max);
+				editor.procedural(min, max, WorldBlock(1, textureId));
+			}
+			break;
+		case KeySymbol.k_delete: // copy
+			if (keyEvent.type == KeyEvent.Type.press) {
+				uint[3] min, max;
+				selectionToMinMax(min, max);
+				editor.edit(min, max, WorldBlock());
+			}
+			break;
+		case KeySymbol.k_c: // copy
+			if (keyEvent.type == KeyEvent.Type.press && ctrl) {
+				uint[3] min, max;
+				selectionToMinMax(min, max);
+				editor.copy(min, max);
+			}
+			break;
+		case KeySymbol.k_v: // paste
+			if (keyEvent.type == KeyEvent.Type.press && ctrl) {
+				editor.paste(selectionStart);
+			}
+			break;
+		case KeySymbol.k_z: // undo
+		case KeySymbol.k_backspace: // undo
+			if (keyEvent.type == KeyEvent.Type.press && ctrl) {
+				editor.undo();
+			}
+			break;
+		case KeySymbol.k_y: // redo
+			if (keyEvent.type == KeyEvent.Type.press && ctrl) {
+				editor.redo();
+			}
+			break;
+		case KeySymbol.k_f2: // reset renderer
+			if (keyEvent.type == KeyEvent.Type.press) {
+				world.root.shrink();
+				core.memory.GC.collect();
+				worldRenderer.destroyAllMeshes();
+			}
+			break;
+		case KeySymbol.k_f3: // toggle fly
+			if (keyEvent.type == KeyEvent.Type.press) {
+				player.flags ^= Player.Flag.noclip;
+			}
+			break;
+		case KeySymbol.k_f5: // save
+			if (keyEvent.type == KeyEvent.Type.release) {
+				world.save("world.raw");
+				dev("world saved");
+			}
+			break;
+		case KeySymbol.k_f8: // load
+			if (keyEvent.type == KeyEvent.Type.release) {
+				load("world.raw");
+				dev("world loaded");
+			}
+			break;
+		/*case KeySymbol.k_f11: // new world
+			if (keyEvent.type == KeyEvent.Type.release) {
+				world = new World(5);
+				worldRenderer.setWorldRoot(world.root);
+				editor = new Editor(world.root);
+			}
+			break;*/
+		case KeySymbol.k_lctrl:
+			if (keyEvent.type == KeyEvent.Type.release) ctrl = false;
+			else ctrl = true;
+			break;
+		default:
 		}
 	}
 
 	void onMouseButtonEvent(const MouseButtonEvent* event)
 	{
-		if (state == State.edit) {
-			if (event.button == MouseButton.left) {
-				if (event.type == MouseButtonEvent.Type.press) {
-					selecting = true;
-					if (editMode == EditMode.select) {
-						selectionStart = selectionEnd = point;
-					}
-				} else {
-					selecting = false;
-					if (editMode == EditMode.add || editMode == EditMode.paint) {
-						uint[3] min, max;
-						selectionToMinMax(min, max);
-						editor.edit(min, max, WorldBlock(1, textureId));
-					}
+		if (state == State.playing) return;
+
+		switch (event.button) {
+		case MouseButton.left:
+			if (event.type == MouseButtonEvent.Type.press) {
+				selecting = true;
+				if (editMode == EditMode.select) {
+					selectionStart = selectionEnd = point;
+				}
+			} else {
+				selecting = false;
+				if (editMode == EditMode.add || editMode == EditMode.paint) {
+					uint[3] min, max;
+					selectionToMinMax(min, max);
+					editor.edit(min, max, WorldBlock(1, textureId));
 				}
 			}
-			if (event.button == MouseButton.middle) {
-				textureId = world.root.getBlock(point[0], point[1], point[2]).data0;
-			}
-			if (event.button == MouseButton.scrollUp) {
-				if (textureId < 255) textureId++;
-			}
-			if (event.button == MouseButton.scrollDown) {
-				if (textureId > 0) textureId--;
-			}
+			break;
+		case MouseButton.middle:
+			textureId = world.root.getBlock(point[0], point[1], point[2]).data0;
+			break;
+		case MouseButton.scrollUp:
+			if (textureId < 255) textureId++;
+			break;
+		case MouseButton.scrollDown:
+			if (textureId > 0) textureId--;
+			break;
+		default:
 		}
 	}
 
 	private void setState(State state)
 	{
-		final switch (state) {
-		case State.edit:
-			player.setFlag(Player.Flag.noclip);
-			break;
-		case State.playing:
-			player.unsetFlag(Player.Flag.noclip);
-			break;
+		this.state = state;
+		if (state == State.playing) {
+			cumulativeTime = 0;
 		}
 	}
 
@@ -367,10 +387,8 @@ final class Demo: Engine
 	*/
 	void demoManager(float time)
 	{
-		ef.clear();
-		return;
 		if (demoState == 0) {
-			immutable float sec = 0; // DEV: jump to precise moment
+			immutable float sec = 34; // DEV: jump to precise moment
 			mainMusicSource.seekTime(sec);
 			cumulativeTime = sec;
 			mainMusicSource.play();
@@ -406,12 +424,26 @@ final class Demo: Engine
 				ef.push(new Fade(ctx, white, black, 0.5f));
 				ef.push(new StarField(ctx, 100, 17, 7.8f));
 			}
-		} else if (cumulativeTime <= 60) {
+		} else if (cumulativeTime <= 86.5f) {
 			if (demoState != 4) {
 				demoState = 4;
 				ef.clear();
 				ef.push(new Fade(ctx, black, white, 0.5f));
-				ef.push(new Fade(ctx, white, black, 0.5f));
+				ef.push(new Fade(ctx, white, transparent, 0.5f));
+				camera.position = Vec3f(135.5f, 516, 0.5f);
+				camera.yaw = camera.targetYaw = 180 * PI / 180;
+				camera.addPathNode(Vec3f(135.5f, 516, 355));
+				camera.addPathNode(Vec3f(143, 516, 372));
+				camera.addPathNode(Vec3f(149, 516, 376));
+				camera.addPathNode(Vec3f(159, 516, 380.5f));
+				camera.addPathNode(Vec3f(305, 516, 380.5f));
+			}
+		} else if (cumulativeTime <= 100) {
+			if (demoState != 5) {
+				demoState = 5;
+				ef.clear();
+				ef.push(new Fade(ctx, transparent, black, 0.5f));
+				ef.push(new Fireflies(ctx, 18));
 			}
 		}
 	}
@@ -435,6 +467,7 @@ final class Demo: Engine
 		drawUIStringSmall("frame time: " ~ to!string(super.frameTime), 0, 18 * 2);
 		drawUIStringSmall("chunk mesh mem: " ~ to!string(worldRenderer.chunkMeshMem / (2 ^^ 20)), 0, 18 * 3);
 		drawUIStringSmall("chunk mesh count: " ~ to!string(worldRenderer.chunkMeshCount), 0, 18 * 4);
+		drawUIStringSmall(to!string(camera.position.array) ~ " " ~ to!string(cumulativeTime), 0, 18 * 5);
 		ctx.popClipRect();
 	}
 
@@ -448,7 +481,7 @@ final class Demo: Engine
 		// help
 		ctx.pushClipRect(10, height - 90, 1000, 90);
 		drawUIStringSmall("E = change edit mode (" ~ to!string(editMode) ~ ")", 0, 0);
-		drawUIStringSmall("SPACE = increase speed", 0, 25);
+		drawUIStringSmall("SPACE = increase speed    R = fill with procedural", 0, 25);
 		drawUIStringSmall("F2 = reset renderer    F3 = toggle fly    F5 = save    F8 = load", 0, 50);
 		ctx.popClipRect();
 		// texture
@@ -479,13 +512,6 @@ final class Demo: Engine
 		ctx.drawString(smallFont, str, x, y);
 		ctx.setColor(white);
 		ctx.drawString(smallFont, str, x + 1, y + 1);
-	}
-
-	// retrun the fixed position the player is pointing at
-	private uint[3] getFixedPointingPosition()
-	{
-		Vec3f p = player.position + player.forward * 5;
-		return world.floatToUintCoord(p);
 	}
 
 	private void selectionToMinMax(out uint[3] min, out uint[3] max)

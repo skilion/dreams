@@ -1,6 +1,7 @@
 module dreams.editor;
 
-import dreams.world;
+import dreams.noise, dreams.world;
+import std.random;
 
 final class Editor
 {
@@ -22,11 +23,31 @@ final class Editor
 
 	void edit(const ref uint[3] min, const ref uint[3] max, WorldBlock block)
 	{
+		redoActions.length = 0;
 		undoActions ~= backup(min, max);
 		for (uint x = min[0]; x < max[0]; x++) {
 			for (uint y = min[1]; y < max[1]; y++) {
 				for (uint z = min[2]; z < max[2]; z++) {
 					root.insertBlock(block, x, y, z);
+				}
+			}
+		}
+	}
+
+	void procedural(const ref uint[3] min, const ref uint[3] max, WorldBlock block)
+	{
+		float dy = max[1] - min[1];
+		float w = (max[0] - min[0]) * 2;
+		float r = uniform01();
+		for (uint x = min[0]; x < max[0]; x++) {
+			for (uint z = min[2]; z < max[2]; z++) {
+				float h = perlin(x / w + r, r, z / w) * dy;
+				uint y2 = min[1] + cast(uint) h;
+				for (uint y = min[1]; y < y2; y++) {
+					root.insertBlock(block, x, y, z);
+				}
+				for (uint y = y2; y < max[1]; y++) {
+					root.insertBlock(WorldBlock(), x, y, z);
 				}
 			}
 		}
@@ -43,6 +64,8 @@ final class Editor
 	{
 		uint[3] max = clipboardSize;
 		max[] += pos[];
+		redoActions.length = 0;
+		undoActions ~= backup(pos, max);
 		write(pos, max, clipboard);
 	}
 

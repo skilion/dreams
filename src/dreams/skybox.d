@@ -25,7 +25,8 @@ struct Skybox
 	SkyboxShader skyboxShader;
 	IndexBuffer indexBuffer;
 	VertexBuffer vertexBuffer;
-	Texture skyboxTexture;
+	Texture textures[1];
+	int texnum;
 
 	void init(Renderer renderer)
 	{
@@ -36,12 +37,12 @@ struct Skybox
 		vertexBuffer = renderer.createVertexBuffer();
 		renderer.updateIndexBuffer(indexBuffer, skyboxIndices, BufferUsage.staticDraw);
 		renderer.updateVertexBuffer(vertexBuffer, skyboxVertices, BufferUsage.staticDraw);
-		skyboxTexture = renderer.loadTexture("skymap1.png", TextureFilter.linear, TextureWrap.repeat);
+		textures[0] = renderer.loadTexture("skymap1.png", TextureFilter.nearest, TextureWrap.clamp);
 	}
 
 	void shutdown()
 	{
-		renderer.destroyTexture(skyboxTexture);
+		renderer.destroyTextures(textures);
 		renderer.destroyIndexBuffer(indexBuffer);
 		renderer.destroyVertexBuffer(vertexBuffer);
 	}
@@ -54,7 +55,7 @@ struct Skybox
 		auto translation = translationMatrix(view.position.x, view.position.y, view.position.z);
 		auto mvp = view.vp * translation;
 		skyboxShader.mvp.setMat4f(mvp);
-		renderer.setTexture(skyboxTexture);
+		renderer.setTexture(textures[texnum]);
 		renderer.draw(indexBuffer, skyboxIndices.length, vertexBuffer);
 	}
 }

@@ -64,6 +64,16 @@ struct WorldChunk
 	{
 		return blocks[x & chunkSizeMask][y & chunkSizeMask][z & chunkSizeMask];
 	}
+
+	private bool isEmpty()
+	{
+		for (int i = 0; i < chunkSize ^^ 3; i++) {
+			if ((cast(WorldBlock*) (blocks.ptr))[i].dword != 0) {
+				return false;
+			}
+		}
+		return true;
+	}
 }
 
 struct WorldNode
@@ -156,6 +166,30 @@ struct WorldNode
 		WorldChunk* chunk = getChunk(x, y, z);
 		chunk.needUpdate = true;
 		chunk.insertBlock(block, x, y, z);
+	}
+
+	/*
+		Destroy all empty nodes
+	*/
+	bool shrink()
+	{
+		bool shrink = true;
+		if (level > 1) {
+			foreach (ref node; nodes) {
+				if (node) {
+					if (node.shrink()) node = null;
+					else shrink = false;
+				}
+			}
+		} else {
+			foreach (ref chunk; chunks) {
+				if (chunk) {
+					if (chunk.isEmpty()) chunk = null;
+					else shrink = false;
+				}
+			}
+		}
+		return shrink;
 	}
 
 	private void recursiveSave(File file) const

@@ -26,6 +26,10 @@ static this()
 	}
 }
 
+/*
+	Perlin noise
+	Returns noise between 0 .. 1
+*/
 float perlin(float x, float y, float z)
 {
 	int xi = cast(int) x & 255;

@@ -2,7 +2,7 @@ module dreams.effects;
 
 import dreams.view;
 import std.math, std.random;
-import log, graphics, vector;
+import log, renderer, graphics, vector;
 
 interface Effect
 {
@@ -141,6 +141,72 @@ class StarField: Effect
 	}
 }
 
+class Fireflies: Effect
+{
+	private struct Firefly {
+		float time = 0;
+		float duration = 1;
+		int x, y, size;
+	}
+
+	private GraphicsContext ctx;
+	private Xorshift rnd;
+	private Vec4f color;
+	private float duration;
+	private float generation;
+	private Texture circle;
+	private Firefly[32] fireflies;
+
+	this(GraphicsContext ctx, float duration)
+	{
+		this.ctx = ctx;
+		this.duration = duration;
+		circle = ctx.renderer.loadTexture("circle.png", TextureFilter.trilinear, TextureWrap.clamp);
+	}
+
+	~this()
+	{
+		ctx.renderer.destroyTexture(circle);
+	}
+
+	bool update(float time)
+	{
+		foreach (ref f; fireflies) {
+			f.time += time;
+			if (f.time > f.duration) {
+				if (duration > 5) f = createFirefly();
+				else f.size = 0; // HACK: hide the fireflies near the end of the effect
+			}
+		}
+		duration -= time;
+		return duration >= 0;
+	}
+
+	void draw()
+	{
+		ctx.setColor(black);
+		ctx.drawFilledRect(0, 0, int.max, int.max);
+		ctx.setTexture(circle);
+		foreach (ref f; fireflies) {
+			ctx.setColor(mix(transparent, white, sin(f.time / f.duration * PI)));
+			ctx.drawTexturedRect(f.x, f.y, f.size, f.size);
+		}
+	}
+
+	private Firefly createFirefly()
+	{
+		int width, height;
+		ctx.getSize(width, height);
+		Firefly f;
+		f.time = 0;
+		f.duration = uniform!"[]"(1, 5);
+		f.x = uniform!"[]"(-50, width + 50);
+		f.y = uniform!"[]"(-50, height + 50);
+		f.size = uniform!"[]"(height / 40, height / 4);
+		return f;
+	}
+}
+
 final class EffectSystem
 {
 	private Effect[] effects;
@@ -164,6 +230,7 @@ final class EffectSystem
 	{
 		if (effects.length > 0) {
 			if (!effects[0].update(time)) {
+				destroy(effects[0]);
 				effects = effects [1 .. $];
 			}
 		}

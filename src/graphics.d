@@ -36,9 +36,9 @@ static ~this()
 // immediate moode drawing
 final class GraphicsContext
 {
-private:
 	Renderer renderer;
 
+private:
 	// the drawing mode influece which shader is used
 	enum DrawingMode {
 		fill,
@@ -439,7 +439,7 @@ private struct Font_s
 		kerning = FT_HAS_KERNING(face);
 		fontmap.create(fontmapSize);
 		fontmapData = new ubyte[fontmapSize * fontmapSize];
-		currTexture = renderer.createTexture(null, fontmapSize, fontmapSize, TextureFormat.alpha, TextureFilter.linear, TextureWrap.clamp);
+		currTexture = renderer.createTexture(null, fontmapSize, fontmapSize, TextureFormat.alpha, TextureFilter.bilinear, TextureWrap.clamp);
 		dev("%s size is %d but height is %d", filename, size, cast(int) face.size.metrics.height >> 6);
 
 		// preload the ascii glyphs
@@ -502,7 +502,7 @@ private struct Font_s
 		{
 			fontmap.clear();
 			fontmapData[] = 0;
-			currTexture = renderer.createTexture(null, fontmapSize, fontmapSize, TextureFormat.alpha, TextureFilter.linear, TextureWrap.clamp);
+			currTexture = renderer.createTexture(null, fontmapSize, fontmapSize, TextureFormat.alpha, TextureFilter.bilinear, TextureWrap.clamp);
 			if (!fontmap.findLocation(bitmap.width + 1, bitmap.rows + 1, x, y)) {
 				warning("Font_s.loadGlyph: Glyph %X is too big to fit in the fontmap (%dx%d)", c, bitmap.width, bitmap.rows);
 				glyphs[c] = Glyph();

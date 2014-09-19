@@ -108,6 +108,11 @@ if (size >= 2 && size <= 4 && isFloatingPoint!T)
 		{
 			return sqrt(x * x + y * y);
 		}
+
+		auto dot(const Vector vector) const
+		{
+			return x * vector.x + y * vector.y;
+		}
 	}
 
 	static if (size == 3)

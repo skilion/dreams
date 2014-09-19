@@ -37,7 +37,9 @@ enum TextureFormat
 enum TextureFilter
 {
 	nearest,
-	linear
+	atlas,
+	bilinear,
+	trilinear
 }
 
 enum TextureWrap
@@ -56,7 +58,8 @@ enum BufferUsage
 private
 {
 	immutable GLenum[3] glTextureFormat = [GL_RGB, GL_RGBA, /*GL_LUMINANCE*/ 0x1909]; // HACK: OpenGL 2.0 does not support GL_RED
-	immutable GLenum[2] glTextureFilter = [GL_NEAREST, GL_LINEAR];
+	immutable GLenum[4] glTextureMagFilter = [GL_NEAREST, GL_NEAREST, GL_LINEAR, GL_LINEAR];
+	immutable GLenum[4] glTextureMinFilter = [GL_NEAREST, GL_NEAREST_MIPMAP_LINEAR, GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR];
 	immutable GLenum[2] glTextureWrap = [GL_REPEAT, GL_CLAMP_TO_EDGE];
 	immutable GLenum[3] glBufferUsage = [GL_STATIC_DRAW, GL_DYNAMIC_DRAW, GL_STREAM_DRAW];
 }
@@ -267,10 +270,16 @@ public:
 		Texture texture;
 		glGenTextures(1, &texture);
 		glBindTexture(GL_TEXTURE_2D, texture);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, glTextureFilter[filter]);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, glTextureFilter[filter]);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, glTextureWrap[wrap]);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, glTextureWrap[wrap]);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, glTextureMagFilter[filter]);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, glTextureMinFilter[filter]);
+		if (filter == TextureFilter.atlas) {
+			glTexParameteri(GL_TEXTURE_2D, /*GL_GENERATE_MIPMAP*/ 0x8191, GL_TRUE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 4); // HACK: prevent small mipmaps
+		}
+		if (filter == TextureFilter.trilinear) {
+			// HACK: use legacy mipmap generation method to not rely on GL_ARB_framebuffer_object
+			glTexParameteri(GL_TEXTURE_2D, /*GL_GENERATE_MIPMAP*/ 0x8191, GL_TRUE);
+		}
 		glTexImage2D(
 			GL_TEXTURE_2D,
 			0,
@@ -310,6 +319,11 @@ public:
 	void destroyTexture(Texture texture)
 	{
 		glDeleteTextures(1, &texture);
+	}
+
+	void destroyTextures(Texture[] texture)
+	{
+		glDeleteTextures(texture.length, texture.ptr);
 	}
 
 	void draw(IndexBuffer indexBuffer, int indexCount, VertexBuffer vertexBuffer)
