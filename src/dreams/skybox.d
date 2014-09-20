@@ -25,7 +25,7 @@ struct Skybox
 	SkyboxShader skyboxShader;
 	IndexBuffer indexBuffer;
 	VertexBuffer vertexBuffer;
-	Texture textures[1];
+	Texture textures[2];
 	int texnum;
 
 	void init(Renderer renderer)
@@ -37,7 +37,8 @@ struct Skybox
 		vertexBuffer = renderer.createVertexBuffer();
 		renderer.updateIndexBuffer(indexBuffer, skyboxIndices, BufferUsage.staticDraw);
 		renderer.updateVertexBuffer(vertexBuffer, skyboxVertices, BufferUsage.staticDraw);
-		textures[0] = renderer.loadTexture("skymap1.png", TextureFilter.nearest, TextureWrap.clamp);
+		textures[0] = renderer.loadTexture("skybox0.png", TextureFilter.nearest, TextureWrap.clamp);
+		textures[1] = renderer.loadTexture("skybox1.png", TextureFilter.nearest, TextureWrap.clamp);
 	}
 
 	void shutdown()
@@ -89,9 +90,9 @@ private immutable Vertex[24] skyboxVertices = [
 	{[+10, -10, -10], [0, 127, 0, 0], [k * 08, k * 06], [127, 127, 127, 127]},
 	// above
 	{[-10, +10, -10], [0, -128, 0, 0], [k * 04, k * 10], [127, 127, 127, 127]},
-	{[+10, +10, -10], [0, -128, 0, 0], [k * 04, k * 14], [127, 127, 127, 127]},
+	{[+10, +10, -10], [0, -128, 0, 0], [k * 08, k * 10], [127, 127, 127, 127]},
 	{[+10, +10, +10], [0, -128, 0, 0], [k * 08, k * 14], [127, 127, 127, 127]},
-	{[-10, +10, +10], [0, -128, 0, 0], [k * 08, k * 10], [127, 127, 127, 127]},
+	{[-10, +10, +10], [0, -128, 0, 0], [k * 04, k * 14], [127, 127, 127, 127]},
 ];
 
 private immutable Index[36] skyboxIndices = [

@@ -37,16 +37,20 @@ final class Editor
 	void procedural(const ref uint[3] min, const ref uint[3] max, WorldBlock block)
 	{
 		float dy = max[1] - min[1];
-		float w = (max[0] - min[0]) * 2;
+		float w1 = (max[0] - min[0]);
+		float w2 = (max[2] - min[2]);
 		float r = uniform01();
 		for (uint x = min[0]; x < max[0]; x++) {
 			for (uint z = min[2]; z < max[2]; z++) {
-				float h = perlin(x / w + r, r, z / w) * dy;
+				float h = perlin(4 * x / w1, r, 4 * z / w2) * dy;
 				uint y2 = min[1] + cast(uint) h;
-				for (uint y = min[1]; y < y2; y++) {
+				for (uint y = 0; y < y2 - 2; y++) {
+					root.insertBlock(WorldBlock(), x, y, z);
+				}
+				for (uint y = y2 - 2; y < y2; y++) {
 					root.insertBlock(block, x, y, z);
 				}
-				for (uint y = y2; y < max[1]; y++) {
+				for (uint y = y2; y < max[2]; y++) {
 					root.insertBlock(WorldBlock(), x, y, z);
 				}
 			}

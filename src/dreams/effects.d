@@ -150,15 +150,14 @@ class Fireflies: Effect
 	}
 
 	private GraphicsContext ctx;
-	private Xorshift rnd;
-	private Vec4f color;
+	private auto rnd = Xorshift(2);
 	private float duration;
-	private float generation;
 	private Texture circle;
 	private Firefly[32] fireflies;
 
 	this(GraphicsContext ctx, float duration)
 	{
+		assert(duration > 5);
 		this.ctx = ctx;
 		this.duration = duration;
 		circle = ctx.renderer.loadTexture("circle.png", TextureFilter.trilinear, TextureWrap.clamp);
@@ -174,7 +173,7 @@ class Fireflies: Effect
 		foreach (ref f; fireflies) {
 			f.time += time;
 			if (f.time > f.duration) {
-				if (duration > 5) f = createFirefly();
+				if (duration > 4) f = createFirefly();
 				else f.size = 0; // HACK: hide the fireflies near the end of the effect
 			}
 		}
@@ -199,10 +198,78 @@ class Fireflies: Effect
 		ctx.getSize(width, height);
 		Firefly f;
 		f.time = 0;
-		f.duration = uniform!"[]"(1, 5);
-		f.x = uniform!"[]"(-50, width + 50);
-		f.y = uniform!"[]"(-50, height + 50);
-		f.size = uniform!"[]"(height / 40, height / 4);
+		f.duration = uniform!"[]"(1, 5, rnd);
+		f.x = uniform!"[]"(-50, width + 50, rnd);
+		f.y = uniform!"[]"(-50, height + 50, rnd);
+		f.size = uniform!"[]"(height / 40, height / 4, rnd);
+		return f;
+	}
+}
+
+// flash effect with moving lights
+class Fireflies2: Effect
+{
+	private struct Firefly {
+		float x, y;
+		int size;
+	}
+
+	private GraphicsContext ctx;
+	private Xorshift rnd;
+	private Vec4f color;
+	private Vec2f speed;
+	private float duration;
+	private float time = 0;
+	private Texture circle;
+	private Firefly[32] fireflies;
+
+	this(GraphicsContext ctx, Vec4f color, Vec2f speed, float duration)
+	{
+		this.ctx = ctx;
+		this.color = color;
+		this.speed = speed;
+		this.duration = duration;
+		rnd.seed(unpredictableSeed());
+		circle = ctx.renderer.loadTexture("circle.png", TextureFilter.trilinear, TextureWrap.clamp);
+		foreach (ref f; fireflies) {
+			f = createFirefly();
+		}
+	}
+
+	~this()
+	{
+		ctx.renderer.destroyTexture(circle);
+	}
+
+	bool update(float time)
+	{
+		foreach (ref f; fireflies) {
+			f.x += speed.x * time;
+			f.y += speed.y * time;
+		}
+		this.time += time;
+		return this.time <= duration;
+	}
+
+	void draw()
+	{
+		ctx.setColor(black);
+		ctx.drawFilledRect(0, 0, int.max, int.max);
+		ctx.setTexture(circle);
+		foreach (ref f; fireflies) {
+			ctx.setColor(mix(transparent, color, sin(time / duration * PI)));
+			ctx.drawTexturedRect(cast(int) f.x, cast(int) f.y, f.size, f.size);
+		}
+	}
+
+	private Firefly createFirefly()
+	{
+		int width, height;
+		ctx.getSize(width, height);
+		Firefly f;
+		f.x = uniform!"[]"(-100, width + 100, rnd);
+		f.y = uniform!"[]"(-100, height + 100, rnd);
+		f.size = uniform!"[]"(height / 40, height / 4, rnd);
 		return f;
 	}
 }

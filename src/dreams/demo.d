@@ -96,8 +96,9 @@ final class Demo: Engine
 		mainMusicSource.setSound(mainMusic);
 
 		// editor camera
-		player.position = Vec3f(135.5f, 516, 0.5f);
-		freeCamera.yaw = 180 * PI / 180;
+		player.setFlag(Player.Flag.noclip);
+		player.position = Vec3f(769.5f, 256, 1006);
+		freeCamera.yaw = 0 * PI / 180;
 
 		load(wordFilename);
 		worldRenderer.setWorldRoot(world.root);
@@ -105,14 +106,15 @@ final class Demo: Engine
 
 		// --------------------------
 		setState(State.edit);
+		skybox.texnum = 1;
 		// --------------------------
 
 		// start with a black screen
 		if (state == State.playing) ef.push(new Blank(ctx, black, 1000));
 
 		// setting the demo camera in advance gives time to worldRenderer to generate the chunks
-		camera.position = Vec3f(135.5f, 516, 0.5f);
-		camera.yaw = 180 * PI / 180;
+		//camera.position = Vec3f(135.5f, 516, 0.5f);
+		//camera.yaw = 180 * PI / 180;
 
 		// run gc before starting
 		core.memory.GC.collect();
@@ -393,7 +395,7 @@ final class Demo: Engine
 	void demoManager(float time)
 	{
 		if (demoState == 0) {
-			immutable float sec = 34; // DEV: jump to precise moment
+			immutable float sec = 122; // DEV: jump to precise moment
 			mainMusicSource.seekTime(sec);
 			cumulativeTime = sec;
 			mainMusicSource.play();
@@ -429,7 +431,7 @@ final class Demo: Engine
 				ef.push(new Fade(ctx, white, black, 0.5f));
 				ef.push(new StarField(ctx, 100, 17, 7.8f));
 			}
-		} else if (cumulativeTime <= 86.5f) {
+		} else if (cumulativeTime <= 86) {
 			if (demoState != 4) {
 				demoState = 4;
 				ef.clear();
@@ -437,18 +439,44 @@ final class Demo: Engine
 				ef.push(new Fade(ctx, white, transparent, 0.5f));
 				camera.position = Vec3f(135.5f, 516, 0.5f);
 				camera.yaw = camera.targetYaw = 180 * PI / 180;
+				camera.clearPath();
 				camera.addPathNode(Vec3f(135.5f, 516, 355));
 				camera.addPathNode(Vec3f(143, 516, 372));
 				camera.addPathNode(Vec3f(149, 516, 376));
 				camera.addPathNode(Vec3f(159, 516, 380.5f));
 				camera.addPathNode(Vec3f(305, 516, 380.5f));
 			}
-		} else if (cumulativeTime <= 100) {
+		} else if (cumulativeTime <= 122) {
 			if (demoState != 5) {
 				demoState = 5;
 				ef.clear();
 				ef.push(new Fade(ctx, transparent, black, 0.5f));
 				ef.push(new Fireflies(ctx, 18));
+				ef.push(new Fireflies2(ctx, Vec4f(1, 0.8f, 0.5f, 1), Vec2f(25, 25), 1));
+				ef.push(new Fireflies2(ctx, Vec4f(1, 0.5f, 0.15f, 1), Vec2f(-50, -50), 1));
+				ef.push(new Blank(ctx, black, 2.5f));
+				ef.push(new Fireflies2(ctx, Vec4f(0.7f, 0.9f, 0.1f, 1), Vec2f(25, -25), 1));
+				ef.push(new Fireflies2(ctx, Vec4f(0.1f, 0.7f, 0.3f, 1), Vec2f(-50, 50), 1));
+				ef.push(new Blank(ctx, black, 2.3f));
+				ef.push(new Fireflies2(ctx, Vec4f(0.6f, 0.85f, 0.9f, 1), Vec2f(25, 25), 1));
+				ef.push(new Fireflies2(ctx, Vec4f(0, 0.6f, 0.9f, 1), Vec2f(-50, -50), 1));
+				ef.push(new Blank(ctx, black, 2.2f));
+				ef.push(new Fireflies2(ctx, Vec4f(1, 0.6f, 0.1f, 1), Vec2f(25, -25), 1));
+				ef.push(new Fireflies2(ctx, Vec4f(0.95f, 0.25f, 0.15f, 1), Vec2f(-50, 50), 1));
+				ef.push(new Blank(ctx, black, 1000));
+				// begin preloading chunks for the next event
+				camera.position = Vec3f(769.5f, 256, 1006);
+				camera.yaw = camera.targetYaw = 0;
+			}
+		} else if (cumulativeTime <= 150) {
+			if (demoState != 6) {
+				demoState = 6;
+				ef.clear();
+				ef.push(new Fade(ctx, black, transparent, 0.5f));
+				camera.position = Vec3f(769.5f, 256, 1006);
+				camera.yaw = camera.targetYaw = 0;
+				camera.clearPath();
+				camera.addPathNode(Vec3f(769.5f, 256, 400));
 			}
 		}
 	}
@@ -471,7 +499,7 @@ final class Demo: Engine
 		drawUIStringSmall("frame time: " ~ to!string(super.frameTime), 0, 18 * 2);
 		drawUIStringSmall("chunk mesh mem: " ~ to!string(worldRenderer.chunkMeshMem / (2 ^^ 20)), 0, 18 * 3);
 		drawUIStringSmall("chunk mesh count: " ~ to!string(worldRenderer.chunkMeshCount), 0, 18 * 4);
-		drawUIStringSmall(to!string(camera.position.array) ~ " " ~ to!string(cumulativeTime), 0, 18 * 5);
+		drawUIStringSmall(to!string(player.position.array), 0, 18 * 5);
 		ctx.popClipRect();
 	}
 

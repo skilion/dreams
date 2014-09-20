@@ -1,8 +1,8 @@
 module dreams.particles;
 
 import dreams.view, dreams.imm3d;
-import std.algorithm, std.random;
-import log, vector;
+import std.algorithm, std.math, std.random;
+import log, matrix, vector;
 
 struct Emitter
 {
@@ -10,12 +10,17 @@ struct Emitter
 	float minSize;
 	float maxSize;
 	float rate;
+	
+	// particles properties
+	float minDuration, maxDuration;
+	Vec3f velocity;
+	float vibration; // randomize the initial velocity [0 .. 1]
+	float weight;
+	float size;
+	Vec4f color;
 
-	float minDuration; // duration of each particle
-	float maxDuration;
-	Vec3f velocity; // initial particles velocity
-
-	private float generation; // increased over time, when it exceed 1  a new particle is created
+	// increased over time, when it exceed 1 a new particle is created
+	private float generation = 0;
 }
 
 struct Particle
@@ -23,20 +28,24 @@ struct Particle
 	float duration;
 	Vec3f velocity;
 	Vec3f position;
+	float weight, size;
 	byte[4] color;
 }
 
 final class ParticleSystem
 {
-	private auto rnd = Xorshift(1); // source of random data
-	private Emitter*[] emitters;
-	private Particle[] particles;
-
-	Vec3f gravity;
+private:
+	Xorshift rnd; // fast source of random data
+	Emitter*[] emitters;
+	Particle[] particles;
 	immutable int maxParticles;
+
+public:
+	Vec3f gravity = Vec3f(0, -9.81, 0);
 
 	this()
 	{
+		rnd.seed(unpredictableSeed());
 		maxParticles = 1000;
 		particles.reserve(maxParticles);
 	}
@@ -55,9 +64,8 @@ final class ParticleSystem
 		emitter.generation = 0;
 	}
 
-	void removeEmitter(Emitter* emitter)
+	void removeEmitter(Emitter emitter)
 	{
-		assert(emitters.length > 0, "ParticleSystem.removeEmitter: The system does not contain any emitter");
 		for (int i = 0; i < emitters.length; i++) {
 			if (emitters[i] == emitter) {
 				swap(emitters[i], emitters[$ - 1]);
@@ -65,7 +73,7 @@ final class ParticleSystem
 				return;
 			}
 		}
-		assert(0, "ParticleSystem.removeEmitter: The emitter has not been found");
+		assert(0, "ParticleSystem.removeEmitter: The specified emitter has not been found");
 	}
 
 	void update(float time)
@@ -75,14 +83,15 @@ final class ParticleSystem
 			if (particles[i].duration <= 0) {
 				swap(particles[i], particles[$ - 1]);
 				particles.length--;
+				continue;
 			}
 			particles[i].duration -= time;
-			particles[i].velocity += gravity * time;
+			particles[i].velocity += gravity * particles[i].weight * time;
 			particles[i].position += particles[i].velocity * time;
 		}
 		// create new particles from the emitters
 		if (particles.length >= maxParticles) {
-			//dev("ParticleSystem.update: Max number of particles reached");
+			dev("ParticleSystem.update: Max number of particles reached");
 			return;
 		}
 		for (int i = 0; i < emitters.length; i++) {
@@ -100,7 +109,7 @@ final class ParticleSystem
 		imm.setTexture(0);
 		foreach (ref particle; particles) {
 			imm.setColor(particle.color);
-			imm.drawBillboard(particle.position, 0.05, 0.05);
+			imm.drawBillboard(particle.position, particle.size, particle.size);
 		}
 	}
 
@@ -109,8 +118,15 @@ final class ParticleSystem
 		Particle p;
 		p.duration = uniform!"[]"(emitter.minDuration, emitter.maxDuration, rnd);
 		p.velocity = emitter.velocity;
+		p.velocity = rotXMat3f(uniform!"[]"(-PI, PI, rnd) * emitter.vibration) * p.velocity;
+		p.velocity = rotYMat3f(uniform!"[]"(-PI, PI, rnd) * emitter.vibration) * p.velocity;
 		p.position = randomPoint(emitter.position, emitter.minSize, emitter.maxSize);
-		p.color = [127, 0, 0, 127];
+		p.weight = emitter.weight;
+		p.size = emitter.size;
+		p.color[0] = cast(byte) (emitter.color[0] * byte.max);
+		p.color[1] = cast(byte) (emitter.color[1] * byte.max);
+		p.color[2] = cast(byte) (emitter.color[2] * byte.max);
+		p.color[3] = cast(byte) (emitter.color[3] * byte.max);
 		return p;
 	}
 
@@ -122,4 +138,13 @@ final class ParticleSystem
 		p.z = point.z + uniform!"[]"(min, max, rnd);
 		return p;
 	}
+
+	/*private Vec3f randomVector()
+	{
+		float a = uniform!"[]"(-PI, PI, rnd);
+		float b = uniform!"[]"(0, 2 * PI, rnd);
+		float c0 = cos(a), s0 = sin(a);
+		float c1 = cos(b), s1 = sin(b);
+		return Vec3f(c0 * c1, s0, c0 * s1);
+	}*/
 }

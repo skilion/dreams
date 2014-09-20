@@ -7,8 +7,8 @@ final class ZInFile
 {
 	private File file;
 	private UnCompress u;
-	private static immutable chunk = 256 * 2 ^^ 10; // 256 KiB
-	private byte[chunk] src; // HACK: using void triggers a dmd bug
+	private static immutable chunk = 32 * 2 ^^ 10;
+	private void[chunk] src = void;
 	private const(void)[] extracted;
 	
 	this(string filename)
@@ -24,7 +24,7 @@ final class ZInFile
 	void open(string filename)
 	{
 		file.open(filename, "rb");
-		u = new UnCompress(chunk);
+		u = new UnCompress();
 	}
 
 	void close()
@@ -58,7 +58,7 @@ final class ZInFile
 	{
 		auto read = file.rawRead(src);
 		if (read.length > 0) {
-			extracted = u.uncompress(read);
+			extracted = u.uncompress(read.dup); // HACK: see https://issues.dlang.org/show_bug.cgi?id=3191
 		} else {
 			extracted = u.flush();
 		}

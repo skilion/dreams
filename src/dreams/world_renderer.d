@@ -71,7 +71,6 @@ final class WorldRenderer
 			mesherThreads.length = 0;
 			for (int i = 0; i < mesherThreadsNum; i++) {
 				mesherThreads ~= spawn(&mesherThread, cast(immutable WorldNode*) root);
-				setMaxMailboxSize(mesherThreads[i], 1024, OnCrowding.throwException); 
 			}
 		}
 	}

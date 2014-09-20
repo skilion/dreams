@@ -127,6 +127,18 @@ Mat4f translationMatrix(float x, float y, float z)
 	return matrix;
 }
 
+Mat3f rotXMat3f(float rad)
+{
+	Mat3f matrix;
+	float c = cos(rad);
+	float s = sin(rad);
+	matrix.m22 = c;
+	matrix.m23 = -s;
+	matrix.m32 = s;
+	matrix.m33 = c;
+	return matrix;
+}
+
 Mat4f rotXMatrix(float rad)
 {
 	Mat4f matrix;
@@ -135,6 +147,18 @@ Mat4f rotXMatrix(float rad)
 	matrix.m22 = c;
 	matrix.m23 = -s;
 	matrix.m32 = s;
+	matrix.m33 = c;
+	return matrix;
+}
+
+Mat3f rotYMat3f(float rad)
+{
+	Mat3f matrix;
+	float c = cos(rad);
+	float s = sin(rad);
+	matrix.m11 = c;
+	matrix.m13 = s;
+	matrix.m31 = -s;
 	matrix.m33 = c;
 	return matrix;
 }
@@ -148,6 +172,18 @@ Mat4f rotYMatrix(float rad)
 	matrix.m13 = s;
 	matrix.m31 = -s;
 	matrix.m33 = c;
+	return matrix;
+}
+
+Mat3f rotZMat3f(float rad)
+{
+	Mat3f matrix;
+	float c = cos(rad);
+	float s = sin(rad);
+	matrix.m11 = c;
+	matrix.m12 = -s;
+	matrix.m21 = s;
+	matrix.m22 = c;
 	return matrix;
 }
 

@@ -108,7 +108,9 @@ struct ControlledFpsCamera
 					targetYaw += addYaw;
 				}
 				path = path[1 .. $];
-			} else position += delta * speed * time;
+			} else {
+				position += delta * speed * time;
+			}
 		}
 
 		computeForwardVector();
