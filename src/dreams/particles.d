@@ -14,7 +14,9 @@ struct Emitter
 	// particles properties
 	float minDuration, maxDuration;
 	Vec3f velocity;
-	float vibration; // randomize the initial velocity [0 .. 1]
+	float vibrationX; // randomize the initial velocity [0 .. 1]
+	float vibrationY; // randomize the initial velocity [0 .. 1]
+	float vibrationZ; // randomize the initial velocity [0 .. 1]
 	float weight;
 	float size;
 	Vec4f color;
@@ -46,7 +48,7 @@ public:
 	this()
 	{
 		rnd.seed(unpredictableSeed());
-		maxParticles = 1000;
+		maxParticles = 6000;
 		particles.reserve(maxParticles);
 	}
 
@@ -64,7 +66,7 @@ public:
 		emitter.generation = 0;
 	}
 
-	void removeEmitter(Emitter emitter)
+	void removeEmitter(Emitter* emitter)
 	{
 		for (int i = 0; i < emitters.length; i++) {
 			if (emitters[i] == emitter) {
@@ -118,8 +120,9 @@ public:
 		Particle p;
 		p.duration = uniform!"[]"(emitter.minDuration, emitter.maxDuration, rnd);
 		p.velocity = emitter.velocity;
-		p.velocity = rotXMat3f(uniform!"[]"(-PI, PI, rnd) * emitter.vibration) * p.velocity;
-		p.velocity = rotYMat3f(uniform!"[]"(-PI, PI, rnd) * emitter.vibration) * p.velocity;
+		p.velocity = rotXMat3f(uniform!"[]"(-PI, PI, rnd) * emitter.vibrationX) * p.velocity;
+		p.velocity = rotYMat3f(uniform!"[]"(-PI, PI, rnd) * emitter.vibrationY) * p.velocity;
+		p.velocity = rotZMat3f(uniform!"[]"(-PI, PI, rnd) * emitter.vibrationZ) * p.velocity;
 		p.position = randomPoint(emitter.position, emitter.minSize, emitter.maxSize);
 		p.weight = emitter.weight;
 		p.size = emitter.size;

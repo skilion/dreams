@@ -1,6 +1,6 @@
 module dreams.entities;
 
-import dreams.world;
+import dreams.particles, dreams.world;
 import std.math;
 import log, renderer, vector;
 

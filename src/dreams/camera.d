@@ -51,7 +51,7 @@ struct ControlledFpsCamera
 	float sensibility = 0.01f;
 	float pitch = 0, yaw = 0;
 	float targetPitch = 0, targetYaw = 0;
-	float lockAngle = 80 * PI / 180;
+	float lockAngle = 60 * PI / 180;
 	float speed = 10;
 
 	Vec3f position = Vec3f(0, 0, 0);

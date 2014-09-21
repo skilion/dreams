@@ -1,6 +1,6 @@
 module dreams.demo;
 
-import std.algorithm, std.conv, std.math;
+import std.algorithm, std.conv, std.math, std.random;
 import dreams.camera, dreams.editor, dreams.effects, dreams.entities;
 import dreams.imm3d, dreams.noise, dreams.particles, dreams.skybox;
 import dreams.view, dreams.world, dreams.world_renderer;
@@ -9,11 +9,19 @@ import log, matrix, renderer, vector;
 
 private immutable wordFilename = "world.z";
 
+private immutable Vec4f[4] fireworkColors = [
+	Vec4f(1.0f, 0.2f, 0.2f, 0.8f),
+	Vec4f(0.6f, 1.0f, 0.8f, 0.8f),
+	Vec4f(0.9f, 0.8f, 0.1f, 0.8f),
+	Vec4f(0.9f, 0.8f, 0.5f, 0.8f)
+];
+
 final class Demo: Engine
 {
 	private GraphicsContext ctx;
 	private Font smallFont, defaultFont;
 	private Immediate3D imm;
+	private Xorshift rnd;
 
 	private World world;
 	private WorldRenderer worldRenderer;
@@ -34,10 +42,15 @@ final class Demo: Engine
 
 	// demo variables
 	private {
+		struct Firework { // simply an emitter with little life
+			Emitter* emitter;
+			float delay, life;
+		}
 		Sound mainMusic;
 		Source mainMusicSource;
 		float cumulativeTime = 0;
 		int demoState = 0;
+		Firework[] fireworks;
 	}
 
 	// editor variables
@@ -58,7 +71,8 @@ final class Demo: Engine
 
 	this()
 	{
-		super("We're Made Of Dreams");
+		super("");
+		rnd.seed(unpredictableSeed());
 		ctx = new GraphicsContext(super.renderer);
 		imm = new Immediate3D(super.renderer);
 		worldRenderer = new WorldRenderer(super.renderer);
@@ -217,6 +231,25 @@ final class Demo: Engine
 		}
 		ps.update(time);
 		ef.update(time);
+
+		// update fireworks
+		for (int i = 0; i < fireworks.length; i++) {
+			if (fireworks[i].delay == -1000) {
+				if (fireworks[i].life <= 0) {
+					ps.removeEmitter(fireworks[i].emitter);
+					swap(fireworks[i], fireworks[$ - 1]);
+					fireworks.length--;
+					continue;
+				}
+				fireworks[i].life -= time;
+			} else {
+				fireworks[i].delay -= time;
+				if (fireworks[i].delay <= 0) {
+					ps.addEmitter(fireworks[i].emitter);
+					fireworks[i].delay = -1000;
+				}
+			}
+		}
 
 		if (state == State.edit) {
 			// selection
@@ -468,7 +501,7 @@ final class Demo: Engine
 				camera.position = Vec3f(769.5f, 256, 1006);
 				camera.yaw = camera.targetYaw = 0;
 			}
-		} else if (cumulativeTime <= 150) {
+		} else if (cumulativeTime <= 126) {
 			if (demoState != 6) {
 				demoState = 6;
 				ef.clear();
@@ -476,7 +509,28 @@ final class Demo: Engine
 				camera.position = Vec3f(769.5f, 256, 1006);
 				camera.yaw = camera.targetYaw = 0;
 				camera.clearPath();
-				camera.addPathNode(Vec3f(769.5f, 256, 400));
+				camera.addPathNode(Vec3f(769.5f, 256, 980));
+				camera.addPathNode(Vec3f(769.5f, 260, 920));
+				camera.addPathNode(Vec3f(769.5f, 260, 400));
+			}
+		} else if (cumulativeTime <= 131) {
+			if (demoState != 7) {
+				demoState = 7;
+				launchFireworks(Vec3f(570, 250, 800), Vec3f(970, 400, 900), 30);
+			}
+		} else if (cumulativeTime <= 135) {
+			if (demoState != 8) {
+				demoState = 8;
+				launchFireworks(Vec3f(570, 250, 750), Vec3f(970, 400, 850), 30);
+			}
+		} else if (cumulativeTime <= 140) {
+			if (demoState != 9) {
+				demoState = 9;
+				launchFireworks(Vec3f(570, 250, 700), Vec3f(970, 400, 800), 30);
+			}
+		} else if (cumulativeTime <= 144) {
+			if (demoState != 10) {
+				demoState = 10;
 			}
 		}
 	}
@@ -557,5 +611,49 @@ final class Demo: Engine
 				max[i] = selectionStart[i] + 1;
 			}
 		}
+	}
+
+	private void launchFireworks(Vec3f min, Vec3f max, int count)
+	{
+		for (int i = 0; i < count; i++) {
+			createFirework(
+				Vec3f(
+					uniform(min[0], max[0], rnd),
+					uniform(min[1], max[1], rnd),
+					uniform(min[2], max[2], rnd)
+				)
+			);
+		}
+	}
+
+	private void createFirework(Vec3f position)
+	{
+		auto e = new Emitter;
+		e.position = position;
+		e.minSize = 0;
+		e.maxSize = 0.1;
+		e.rate = 1000;
+		int n = uniform(0, 2, rnd);
+		e.minDuration = 2.5f;
+		e.maxDuration = 4;
+		switch (uniform(0, 2, rnd)) {
+		case 0:
+			e.velocity = Vec3f(20, 0, 0);
+			e.vibrationX = 1;
+			e.vibrationY = 1;
+			e.vibrationZ = 1;
+			e.weight = 0;
+			break;
+		default:
+			e.velocity = Vec3f(0, 25, 0);
+			e.vibrationX = 0.3f;
+			e.vibrationY = 1;
+			e.vibrationZ = 0;
+			e.weight = 1;
+			break;
+		}
+		e.size = 0.5f;
+		e.color = fireworkColors[uniform(0, fireworkColors.length, rnd)];
+		fireworks ~= Firework(e, uniform01(rnd), 0.1f);
 	}
 }
