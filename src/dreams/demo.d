@@ -18,21 +18,25 @@ private immutable Vec4f[4] fireworkColors = [
 
 final class Demo: Engine
 {
-	private GraphicsContext ctx;
-	private Font smallFont, defaultFont;
-	private Immediate3D imm;
-	private Xorshift rnd;
+private:
+	Xorshift rnd;
+	GraphicsContext ctx;
+	Font smallFont, defaultFont;
+	Immediate3D imm;
 
-	private World world;
-	private WorldRenderer worldRenderer;
-	private Skybox skybox;
+	World world;
+	WorldRenderer worldRenderer;
+	Skybox skybox;
 
-	private Player player;
-	private FpsCamera freeCamera;
-	private ControlledFpsCamera camera;
+	Player player;
+	FpsCamera freeCamera;
+	ControlledFpsCamera camera;
 	
-	private EffectSystem ef;
-	private ParticleSystem ps;
+	EffectSystem ef;
+	ParticleManager pm;
+	ParticleSystem fireworksParticleSystem;
+	ParticleSystem rainParticleSystem;
+	Emitter rainEmitter;
 
 	enum State {
 		edit,
@@ -41,34 +45,31 @@ final class Demo: Engine
 	State state;
 
 	// demo variables
-	private {
-		struct Firework { // simply an emitter with little life
-			Emitter* emitter;
-			float delay, life;
-		}
-		Sound mainMusic;
-		Source mainMusicSource;
-		float cumulativeTime = 0;
-		int demoState = 0;
-		Firework[] fireworks;
+	struct Firework { // simply an emitter with specific life
+		Emitter* emitter;
+		float delay, life;
 	}
+	Sound mainMusic;
+	Source mainMusicSource;
+	float cumulativeTime = 0;
+	int demoState = 0;
+	Firework[] fireworks;
 
 	// editor variables
-	private {
-		enum EditMode {
-			add,
-			select,
-			paint
-		}
-		Editor editor;
-		EditMode editMode;
-		ubyte textureId;
-		bool selecting;
-		byte ctrl; // true if ctrl is pressed
-		uint[3] point; // where the player is pointing
-		uint[3] selectionStart, selectionEnd;
+	enum EditMode {
+		add,
+		select,
+		paint
 	}
+	Editor editor;
+	EditMode editMode;
+	ubyte textureId;
+	bool selecting;
+	byte ctrl; // true if ctrl is pressed
+	uint[3] point; // where the player is pointing
+	uint[3] selectionStart, selectionEnd;
 
+public:
 	this()
 	{
 		super("");
@@ -77,12 +78,30 @@ final class Demo: Engine
 		imm = new Immediate3D(super.renderer);
 		worldRenderer = new WorldRenderer(super.renderer);
 		ef = new EffectSystem();
-		ps = new ParticleSystem();
+		pm = new ParticleManager(imm);
+		fireworksParticleSystem = new ParticleSystem(2000);
+		rainParticleSystem = new ParticleSystem(300);
+
+		fireworksParticleSystem.particleSize = Vec2f(0.5f, 0.5f);
+		rainParticleSystem.particleSize = Vec2f(0.02f, 0.8f);
+		rainEmitter.minSize = -20;
+		rainEmitter.maxSize = 20;
+		rainEmitter.rate = 500;
+		rainEmitter.minDuration = 0.5f;
+		rainEmitter.maxDuration = 0.5f;
+		rainEmitter.velocity = Vec3f(0, -40, 0);
+		rainEmitter.vibrationX = 0;
+		rainEmitter.vibrationY = 0;
+		rainEmitter.vibrationZ = 0;
+		rainEmitter.weight = 1;
+		rainEmitter.color = Vec4f(0.6f, 0.8f, 0.9f, 0.5f);
 	}
 
 	~this()
 	{
-		destroy(ps);
+		destroy(fireworksParticleSystem);
+		destroy(rainParticleSystem);
+		destroy(pm);
 		destroy(ef);
 		destroy(worldRenderer);
 		destroy(imm);
@@ -109,6 +128,10 @@ final class Demo: Engine
 		mainMusicSource = audio.getSource();
 		mainMusicSource.setSound(mainMusic);
 
+		//rainParticleSystem.particleTexture = renderer.loadTexture("rain.png", TextureFilter.trilinear, TextureWrap.clamp);
+		pm.addParticleSystem(fireworksParticleSystem);
+		pm.addParticleSystem(rainParticleSystem);
+
 		// editor camera
 		player.setFlag(Player.Flag.noclip);
 		player.position = Vec3f(769.5f, 256, 1006);
@@ -119,16 +142,12 @@ final class Demo: Engine
 		editor = new Editor(world.root);
 
 		// --------------------------
-		setState(State.edit);
+		setState(State.playing);
 		skybox.texnum = 1;
 		// --------------------------
 
 		// start with a black screen
 		if (state == State.playing) ef.push(new Blank(ctx, black, 1000));
-
-		// setting the demo camera in advance gives time to worldRenderer to generate the chunks
-		//camera.position = Vec3f(135.5f, 516, 0.5f);
-		//camera.yaw = 180 * PI / 180;
 
 		// run gc before starting
 		core.memory.GC.collect();
@@ -136,11 +155,13 @@ final class Demo: Engine
 
 	override void shutdown()
 	{
+		pm.removeParticleSystem(rainParticleSystem);
+		pm.removeParticleSystem(fireworksParticleSystem);
+		renderer.destroyTexture(rainParticleSystem.particleTexture);
 		destroy(editor);
 		destroy(world);
 		ctx.destroyFont(defaultFont);
 		ctx.destroyFont(smallFont);
-
 		input.disconnect(&onKeyEvent);
 		input.disconnect(&onMouseButtonEvent);
 		input.disconnect(&freeCamera.onPointerMoveEvent);
@@ -182,7 +203,7 @@ final class Demo: Engine
 
 		// entities
 		imm.setView(view);
-		ps.draw(imm);
+		pm.draw();
 
 		// 2D effects
 		ef.draw();
@@ -229,14 +250,14 @@ final class Demo: Engine
 			camera.update(time);
 			break;
 		}
-		ps.update(time);
+		pm.update(time);
 		ef.update(time);
 
 		// update fireworks
 		for (int i = 0; i < fireworks.length; i++) {
-			if (fireworks[i].delay == -1000) {
+			if (fireworks[i].delay == -1000) { // ugly time hack
 				if (fireworks[i].life <= 0) {
-					ps.removeEmitter(fireworks[i].emitter);
+					fireworksParticleSystem.removeEmitter(fireworks[i].emitter);
 					swap(fireworks[i], fireworks[$ - 1]);
 					fireworks.length--;
 					continue;
@@ -245,14 +266,18 @@ final class Demo: Engine
 			} else {
 				fireworks[i].delay -= time;
 				if (fireworks[i].delay <= 0) {
-					ps.addEmitter(fireworks[i].emitter);
+					fireworksParticleSystem.addEmitter(fireworks[i].emitter);
 					fireworks[i].delay = -1000;
 				}
 			}
 		}
 
+		// set the rain emitter always over the camera
+		rainEmitter.position = camera.position;
+		rainEmitter.position.y += 20;
+
 		if (state == State.edit) {
-			// selection
+			// editor selection
 			uint[3] face;
 			world.rayCollisionTest(player.position, player.forward, 32, point, face);
 			if (editMode == EditMode.add) point[] += face[];
@@ -418,7 +443,7 @@ final class Demo: Engine
 	{
 		this.state = state;
 		if (state == State.playing) {
-			cumulativeTime = 0;
+			demoState = 0;
 		}
 	}
 
@@ -443,6 +468,9 @@ final class Demo: Engine
 				ef.push(new Fade(ctx, white, black, 3.8f));
 				ef.push(new Fade(ctx, black, white, 0.5f));
 				ef.push(new Fade(ctx, white, black, 4.0f));
+				// begin preloading chunks
+				camera.position = Vec3f(135.5f, 516, 0.5f);
+				camera.yaw = 180 * PI / 180;
 			}
 		} else if (cumulativeTime <= 17.5f) {
 			if (demoState != 2) {
@@ -464,12 +492,13 @@ final class Demo: Engine
 				ef.push(new Fade(ctx, white, black, 0.5f));
 				ef.push(new StarField(ctx, 100, 17, 7.8f));
 			}
-		} else if (cumulativeTime <= 86) {
+		} else if (cumulativeTime <= 85.8f) {
 			if (demoState != 4) {
 				demoState = 4;
 				ef.clear();
 				ef.push(new Fade(ctx, black, white, 0.5f));
 				ef.push(new Fade(ctx, white, transparent, 0.5f));
+				skybox.texnum = 0;
 				camera.position = Vec3f(135.5f, 516, 0.5f);
 				camera.yaw = camera.targetYaw = 180 * PI / 180;
 				camera.clearPath();
@@ -479,11 +508,17 @@ final class Demo: Engine
 				camera.addPathNode(Vec3f(159, 516, 380.5f));
 				camera.addPathNode(Vec3f(305, 516, 380.5f));
 			}
-		} else if (cumulativeTime <= 122) {
+		} else if (cumulativeTime <= 86.4f) {
 			if (demoState != 5) {
 				demoState = 5;
 				ef.clear();
 				ef.push(new Fade(ctx, transparent, black, 0.5f));
+				ef.push(new Blank(ctx, black, 1000));
+			}
+		} else if (cumulativeTime <= 122) {
+			if (demoState != 6) {
+				demoState = 6;
+				ef.clear();
 				ef.push(new Fireflies(ctx, 18));
 				ef.push(new Fireflies2(ctx, Vec4f(1, 0.8f, 0.5f, 1), Vec2f(25, 25), 1));
 				ef.push(new Fireflies2(ctx, Vec4f(1, 0.5f, 0.15f, 1), Vec2f(-50, -50), 1));
@@ -501,36 +536,50 @@ final class Demo: Engine
 				camera.position = Vec3f(769.5f, 256, 1006);
 				camera.yaw = camera.targetYaw = 0;
 			}
-		} else if (cumulativeTime <= 126) {
-			if (demoState != 6) {
-				demoState = 6;
+		} else if (cumulativeTime <= 126.5f) {
+			if (demoState != 7) {
+				demoState = 7;
 				ef.clear();
 				ef.push(new Fade(ctx, black, transparent, 0.5f));
+				skybox.texnum = 1;
 				camera.position = Vec3f(769.5f, 256, 1006);
 				camera.yaw = camera.targetYaw = 0;
 				camera.clearPath();
 				camera.addPathNode(Vec3f(769.5f, 256, 980));
-				camera.addPathNode(Vec3f(769.5f, 260, 920));
-				camera.addPathNode(Vec3f(769.5f, 260, 400));
+				camera.addPathNode(Vec3f(770.0f, 260, 920));
+				camera.addPathNode(Vec3f(769.5f, 260, 800));
+				camera.addPathNode(Vec3f(769.5f, 256, 750));
+				camera.addPathNode(Vec3f(769.5f, 256, 400));
 			}
 		} else if (cumulativeTime <= 131) {
-			if (demoState != 7) {
-				demoState = 7;
-				launchFireworks(Vec3f(570, 250, 800), Vec3f(970, 400, 900), 30);
+			if (demoState != 8) {
+				demoState++;
+				launchFireworks(Vec3f(670, 250, 800), Vec3f(870, 300, 900), 10);
 			}
 		} else if (cumulativeTime <= 135) {
-			if (demoState != 8) {
-				demoState = 8;
-				launchFireworks(Vec3f(570, 250, 750), Vec3f(970, 400, 850), 30);
-			}
-		} else if (cumulativeTime <= 140) {
 			if (demoState != 9) {
-				demoState = 9;
-				launchFireworks(Vec3f(570, 250, 700), Vec3f(970, 400, 800), 30);
+				demoState++;
+				launchFireworks(Vec3f(670, 250, 720), Vec3f(870, 300, 880), 10);
+			}
+		} else if (cumulativeTime <= 139.5f) {
+			if (demoState != 10) {
+				demoState++;
+				launchFireworks(Vec3f(670, 250, 750), Vec3f(870, 300, 850), 10);
 			}
 		} else if (cumulativeTime <= 144) {
-			if (demoState != 10) {
-				demoState = 10;
+			if (demoState != 11) {
+				demoState++;
+				launchFireworks(Vec3f(670, 260, 650), Vec3f(870, 310, 850), 10);
+			}
+		} else if (cumulativeTime <= 157.2f) {
+			if (demoState != 12) {
+				demoState++;
+				launchFireworks(Vec3f(670, 260, 600), Vec3f(870, 310, 800), 10);
+			}
+		} else if (cumulativeTime <= 200) {
+			if (demoState != 13) {
+				demoState = 13;
+				rainParticleSystem.addEmitter(&rainEmitter);
 			}
 		}
 	}
@@ -652,7 +701,6 @@ final class Demo: Engine
 			e.weight = 1;
 			break;
 		}
-		e.size = 0.5f;
 		e.color = fireworkColors[uniform(0, fireworkColors.length, rnd)];
 		fireworks ~= Firework(e, uniform01(rnd), 0.1f);
 	}

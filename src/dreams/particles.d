@@ -2,7 +2,7 @@ module dreams.particles;
 
 import dreams.view, dreams.imm3d;
 import std.algorithm, std.math, std.random;
-import log, matrix, vector;
+import log, matrix, renderer, vector;
 
 struct Emitter
 {
@@ -14,11 +14,10 @@ struct Emitter
 	// particles properties
 	float minDuration, maxDuration;
 	Vec3f velocity;
-	float vibrationX; // randomize the initial velocity [0 .. 1]
-	float vibrationY; // randomize the initial velocity [0 .. 1]
-	float vibrationZ; // randomize the initial velocity [0 .. 1]
-	float weight;
-	float size;
+	float vibrationX; // randomize the initial velocity around the X axis [0 .. 1]
+	float vibrationY; // randomize the initial velocity around the Y axis [0 .. 1]
+	float vibrationZ; // randomize the initial velocity around the Z axis [0 .. 1]
+	float weight; // influence of the gravity of the particle system
 	Vec4f color;
 
 	// increased over time, when it exceed 1 a new particle is created
@@ -44,20 +43,14 @@ private:
 
 public:
 	Vec3f gravity = Vec3f(0, -9.81, 0);
+	Vec2f particleSize = Vec2f(0.1f, 0.1f);
+	Texture particleTexture;
 
-	this()
+	this(int maxParticles)
 	{
 		rnd.seed(unpredictableSeed());
-		maxParticles = 6000;
+		this.maxParticles = maxParticles;
 		particles.reserve(maxParticles);
-	}
-
-	void init()
-	{
-	}
-
-	void shutdown()
-	{
 	}
 
 	void addEmitter(Emitter* emitter)
@@ -108,10 +101,10 @@ public:
 
 	void draw(Immediate3D imm)
 	{
-		imm.setTexture(0);
+		imm.setTexture(particleTexture);
 		foreach (ref particle; particles) {
 			imm.setColor(particle.color);
-			imm.drawBillboard(particle.position, particle.size, particle.size);
+			imm.drawBillboard(particle.position, particleSize.x, particleSize.y);
 		}
 	}
 
@@ -125,7 +118,6 @@ public:
 		p.velocity = rotZMat3f(uniform!"[]"(-PI, PI, rnd) * emitter.vibrationZ) * p.velocity;
 		p.position = randomPoint(emitter.position, emitter.minSize, emitter.maxSize);
 		p.weight = emitter.weight;
-		p.size = emitter.size;
 		p.color[0] = cast(byte) (emitter.color[0] * byte.max);
 		p.color[1] = cast(byte) (emitter.color[1] * byte.max);
 		p.color[2] = cast(byte) (emitter.color[2] * byte.max);
@@ -150,4 +142,47 @@ public:
 		float c1 = cos(b), s1 = sin(b);
 		return Vec3f(c0 * c1, s0, c0 * s1);
 	}*/
+}
+
+final class ParticleManager
+{
+	private Immediate3D imm;
+	private ParticleSystem[] systems;
+
+	this(Immediate3D imm)
+	{
+		this.imm = imm;
+	}
+
+	void addParticleSystem(ParticleSystem system)
+	{
+		systems ~= system;
+	}
+
+	void removeParticleSystem(ParticleSystem system)
+	{
+		for (int i = 0; i < systems.length; i++) {
+			if (systems[i] == system) {
+				swap(systems[i], systems[$ - 1]);
+				systems = systems[0 .. $ - 1];
+				return;
+			}
+		}
+		assert(0, "ParticleManager.removeParticleSystem: The specified system has not been found");
+	}
+
+	void update(float time)
+	{
+		foreach (system; systems) {
+			system.update(time);
+		}
+	}
+
+	void draw()
+	{
+		foreach (system; systems) {
+			system.draw(imm);
+		}
+	}
+
 }

@@ -21,6 +21,7 @@ final class OpenGLWindow
 	int height;
 	int colorDepth;
 	bool fullscreen;
+	int multisampling = 0;
 
 private:
 	Engine engine;
@@ -179,32 +180,30 @@ private:
 
 		int pixelFormat;
 		if (WGL_ARB_pixel_format) {
-			int[17] attribIList = [
+			int[] attributes = [
 				WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
 				WGL_ACCELERATION_ARB, WGL_FULL_ACCELERATION_ARB, //WGL_NO_ACCELERATION_ARB, WGL_GENERIC_ACCELERATION_ARB
 				WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
 				WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
 				WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB,
 				WGL_COLOR_BITS_ARB, colorDepth,
-				WGL_DEPTH_BITS_ARB, 16,
+				WGL_DEPTH_BITS_ARB, 24,
 				WGL_STENCIL_BITS_ARB, 8,
-				0
 			];
-			/*
-			if(multisamples > 0) {
-				if(wgl_arb_multisample) {
-					attributes[n++] = WGL_SAMPLE_BUFFERS_ARB;
-					attributes[n++] = 1;
-					attributes[n++] = WGL_SAMPLES_ARB;
-					attributes[n++] = multisamples;
+			if (multisampling > 0) {
+				if (WGL_ARB_multisample) {
+					attributes ~= [
+						WGL_SAMPLE_BUFFERS_ARB, 1,
+						WGL_SAMPLES_ARB, multisampling,
+					];
 				} else {
-					debugf("Multisampling is not supported by your videocard");
-					multisamples = 0;
+					warning("Multisampling is not supported");
+					multisampling = 0;
 				}
 			}
-			*/
+			attributes ~= 0; // termination
 			uint numFormats;
-			wglChoosePixelFormatARB(hDC, attribIList.ptr, null, 1, &pixelFormat, &numFormats);
+			wglChoosePixelFormatARB(hDC, attributes.ptr, null, 1, &pixelFormat, &numFormats);
 		} else {
 			pixelFormat = ChoosePixelFormat(hDC, &pfd);
 		}

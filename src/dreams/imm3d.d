@@ -159,6 +159,7 @@ public:
 		if (wireframe) state = RenderState.depthTest | RenderState.wireframe;
 		else state = RenderState.cullFace | RenderState.depthTest;
 		renderer.setState(state);
+		renderer.setTexture(texture);
 		renderer.setShader(textureShader.shader);
 		textureShader.mvp.setMat4f(view.vp);
 		if (texture == Texture.init) textureShader.textureMask.setFloat(0);

@@ -52,7 +52,7 @@ final class WorldRenderer
 	void init()
 	{
 		worldShader.init(renderer);
-		worldTexture = renderer.loadTexture("world.png", TextureFilter.atlas, TextureWrap.clamp);
+		worldTexture = renderer.loadTexture("world.png", TextureFilter.nearest, TextureWrap.clamp);
 	}
 
 	void shutdown()

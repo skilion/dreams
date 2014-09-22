@@ -286,7 +286,7 @@ private Vec3f chunkPosition(Vec3f pos, uint index) pure nothrow
 
 struct World
 {
-	Vec3f startPosition;
+	//Vec3f startPosition;
 
 	uint depth; // max height of the octree
 	uint size; // size in block of the world
@@ -403,7 +403,7 @@ struct World
 	void save(string filename) const
 	{
 		auto file = scoped!ZOutFile(filename ~ "__");
-		file.rawWrite(startPosition.array);
+		//file.rawWrite(startPosition.array);
 		file.rawWrite((&depth)[0 .. 1]);
 		root.recursiveSave(file);
 		file.close();
@@ -416,7 +416,7 @@ struct World
 	void load(string filename)
 	{
 		auto file = scoped!ZInFile(filename);
-		file.rawRead(startPosition.array);
+		//file.rawRead(startPosition.array);
 		file.rawRead((&depth)[0 .. 1]);
 		init();
 		root.recursiveLoad(file);
