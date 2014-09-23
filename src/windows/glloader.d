@@ -1,45 +1,34 @@
 module windows.glloader;
 
-import windows.wgl;
-import windows.windows;
+import windows.wgl, windows.windows;
 import cstr, log;
 
 private __gshared HMODULE libGL;
 
 void* glGetProcAddress(const(char)* procName)
 {
-	void* procAddress;
-	if (wglGetProcAddress)
-	{
+	void* procAddress = null;
+	if (wglGetProcAddress) {
 		procAddress = wglGetProcAddress(procName);
-		if (procAddress)
-		{
-			return procAddress;
-		}
 	}
-	if (libGL)
-	{
+	if (libGL && procAddress == null) {
 		procAddress = GetProcAddress(libGL, procName);
 	}
-	if (!procAddress)
-	{
+	if (procAddress == null) {
 		fatal("Can't get the address of %s", cstr2dstr(procName));
 	}
 	return procAddress;
 }
 
-package:
-
-void loadLibGL()
+package void loadLibGL()
 {
 	libGL = LoadLibraryA("Opengl32.dll");
-	if (!libGL)
-	{
+	if (!libGL) {
 		fatal("Can't load Opengl32.dll (error code %d)", GetLastError());
 	}
 }
 
-void unloadLibGL() nothrow
+package void unloadLibGL() nothrow
 {
 	FreeLibrary(libGL);
 	libGL = null;

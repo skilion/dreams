@@ -1,7 +1,6 @@
 module windows.wgl;
 
-import windows.glloader;
-import windows.windows;
+import windows.glloader, windows.windows;
 
 package void loadWGLFunctions()
 {

@@ -37,6 +37,7 @@ enum TextureFormat
 enum TextureFilter
 {
 	nearest,
+	atlas, // HACK: world texture
 	bilinear,
 	trilinear
 }
@@ -57,8 +58,8 @@ enum BufferUsage
 private
 {
 	immutable GLenum[3] glTextureFormat = [GL_RGB, GL_RGBA, /*GL_LUMINANCE*/ 0x1909]; // HACK: OpenGL 2.0 does not support GL_RED
-	immutable GLenum[4] glTextureMagFilter = [GL_NEAREST, GL_LINEAR, GL_LINEAR];
-	immutable GLenum[4] glTextureMinFilter = [GL_NEAREST, GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR];
+	immutable GLenum[4] glTextureMagFilter = [GL_NEAREST, GL_NEAREST, GL_LINEAR, GL_LINEAR];
+	immutable GLenum[4] glTextureMinFilter = [GL_NEAREST, GL_NEAREST_MIPMAP_LINEAR, GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR];
 	immutable GLenum[2] glTextureWrap = [GL_REPEAT, GL_CLAMP_TO_EDGE];
 	immutable GLenum[3] glBufferUsage = [GL_STATIC_DRAW, GL_DYNAMIC_DRAW, GL_STREAM_DRAW];
 }
@@ -85,11 +86,28 @@ private
 	immutable GLint attribColorIndex    = 3;
 }
 
+private struct FxaaShader
+{
+	Shader shader;
+	ShaderUniform texture;
+
+	void init(Renderer renderer)
+	{
+		shader = renderer.findShader("fxaa");
+		texture = renderer.getShaderUniform(shader, "texture");
+	}
+}
+
+private immutable float quadVertices[8] = [-1, -1, 1, -1, -1, 1, 1, 1];
+
 final class Renderer
 {
 private:
 	OpenGLWindow window;
 	Shader[string] shaders;
+	GLuint screenTexture; // texture for post-processing
+	FxaaShader fxaaShader;
+	GLuint quadVertexBuffer;
 
 public:
 	this(OpenGLWindow window)
@@ -108,10 +126,24 @@ public:
 		glEnableVertexAttribArray(attribNormalIndex);
 		glEnableVertexAttribArray(attribTexcoordIndex);
 		glEnableVertexAttribArray(attribColorIndex);
+		// initialize screenTexture
+		glGenTextures(1, &screenTexture);
+		glBindTexture(GL_TEXTURE_2D, screenTexture);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, window.width, window.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, null);
+		// initialize quad vertices
+		glGenBuffers(1, &quadVertexBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, quadVertexBuffer);
+		glBufferData(GL_ARRAY_BUFFER, quadVertices.sizeof, quadVertices.ptr, GL_STATIC_DRAW);
+		// TODO: window resizing...
 		info("Preloading default shaders...");
 		findShader("color");
 		findShader("texture");
 		findShader("alphatex");
+		fxaaShader.init(this);
 	}
 
 	void shutdown()
@@ -120,6 +152,8 @@ public:
 			shader.destroy();
 		}
 		destroy(shaders);
+		glDeleteBuffers(1, &quadVertexBuffer);
+		glDeleteTextures(1, &screenTexture);
 	}
 
 	void setState(uint state)
@@ -167,20 +201,41 @@ public:
 
 	void beginFrame()
 	{
-		glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
+		glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 	}
 
 	void endFrame()
 	{
 		checkOpenGLError();
+		glBindTexture(GL_TEXTURE_2D, screenTexture);
+		glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, window.width, window.height);
+		checkOpenGLError();
+		glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+		glBindTexture(GL_TEXTURE_2D, screenTexture);
+		checkOpenGLError();
+		fxaaShader.shader.use();
+		checkOpenGLError();
+		fxaaShader.texture.setInteger(0);
+		checkOpenGLError();
+		glBindBuffer(GL_ARRAY_BUFFER, quadVertexBuffer);
+		checkOpenGLError();
+		glVertexAttribPointer(attribPositionIndex, 2, GL_FLOAT, GL_FALSE, 0, null);
+		checkOpenGLError();
+		glDisableVertexAttribArray(attribNormalIndex);
+		glDisableVertexAttribArray(attribTexcoordIndex);
+		glDisableVertexAttribArray(attribColorIndex);
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+		checkOpenGLError();
+		glEnableVertexAttribArray(attribNormalIndex);
+		glEnableVertexAttribArray(attribTexcoordIndex);
+		glEnableVertexAttribArray(attribColorIndex);
 		window.swapBuffers();
 	}
 
 	Shader findShader(string name)
 	{
 		auto p = name in shaders;
-		if (!p)
-		{
+		if (!p) {
 			Shader shader = new Shader;
 			shader.create("shaders/" ~ name);
 			return shaders[name] = shader;
@@ -271,6 +326,10 @@ public:
 		glBindTexture(GL_TEXTURE_2D, texture);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, glTextureMagFilter[filter]);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, glTextureMinFilter[filter]);
+		if (filter == TextureFilter.atlas) {
+			glTexParameteri(GL_TEXTURE_2D, /*GL_GENERATE_MIPMAP*/ 0x8191, GL_TRUE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 4); // HACK: prevent small mipmaps
+		}
 		if (filter == TextureFilter.trilinear) {
 			// HACK: legacy mipmap generation method to not rely on GL_ARB_framebuffer_object
 			glTexParameteri(GL_TEXTURE_2D, /*GL_GENERATE_MIPMAP*/ 0x8191, GL_TRUE);

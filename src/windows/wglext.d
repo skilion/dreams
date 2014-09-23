@@ -1,10 +1,7 @@
 module windows.wglext;
 
-import core.stdc.string;
-import gl.ext;
-import windows.glloader;
-import windows.wgl;
-import windows.windows;
+import gl.common;
+import windows.glloader, windows.wgl, windows.windows;
 import cstr, log;
 
 package void loadWGLExtensions()
@@ -12,45 +9,33 @@ package void loadWGLExtensions()
 	scope (failure) return;
 	wglGetExtensionsStringARB = cast(PFNWGLGETEXTENSIONSSTRINGARBPROC) glGetProcAddress("wglGetExtensionsStringARB");
 
-	scope (failure) WGL_ARB_create_context = false;
-	if (isWGLExtSupported("WGL_ARB_create_context"))
-	{
+	if (isWGLExtSupported("WGL_ARB_create_context")) {
 		wglCreateContextAttribsARB = cast(PFNWGLCREATECONTEXTATTRIBSARBPROC) glGetProcAddress("wglCreateContextAttribsARB");
 		WGL_ARB_create_context = true;
 	}
 
-	scope (failure) WGL_ARB_create_context_profile = false;
-	if (isWGLExtSupported("WGL_ARB_create_context_profile"))
-	{
+	if (isWGLExtSupported("WGL_ARB_create_context_profile")) {
 		WGL_ARB_create_context_profile = true;
 	}
 
-	scope (failure) WGL_ARB_multisample = false;
-	if (isWGLExtSupported("WGL_ARB_multisample"))
-	{
+	if (isWGLExtSupported("WGL_ARB_multisample")) {
 		WGL_ARB_multisample = true;
 	}
 
-	scope (failure) WGL_ARB_pixel_format = false;
-	if (isWGLExtSupported("WGL_ARB_pixel_format"))
-	{
+	if (isWGLExtSupported("WGL_ARB_pixel_format")) {
 		wglGetPixelFormatAttribivARB = cast(PFNWGLGETPIXELFORMATATTRIBIVARBPROC) glGetProcAddress("wglGetPixelFormatAttribivARB");
 		wglGetPixelFormatAttribfvARB = cast(PFNWGLGETPIXELFORMATATTRIBFVARBPROC) glGetProcAddress("wglGetPixelFormatAttribfvARB");
 		wglChoosePixelFormatARB = cast(PFNWGLCHOOSEPIXELFORMATARBPROC) glGetProcAddress("wglChoosePixelFormatARB");
 		WGL_ARB_pixel_format = true;
 	}
 
-	scope (failure) WGL_EXT_swap_control = false;
-	if (isWGLExtSupported("WGL_EXT_swap_control"))
-	{
+	if (isWGLExtSupported("WGL_EXT_swap_control")) {
 		wglSwapIntervalEXT = cast(PFNWGLSWAPINTERVALEXTPROC) glGetProcAddress("wglSwapIntervalEXT");
 		wglGetSwapIntervalEXT = cast(PFNWGLGETSWAPINTERVALEXTPROC) glGetProcAddress("wglGetSwapIntervalEXT");
 		WGL_EXT_swap_control = true;
 	}
 
-	scope (failure) WGL_EXT_swap_control_tear = false;
-	if (isWGLExtSupported("WGL_EXT_swap_control_tear"))
-	{
+	if (isWGLExtSupported("WGL_EXT_swap_control_tear")) {
 		WGL_EXT_swap_control_tear = true;
 	}
 }
@@ -65,17 +50,15 @@ package void unloadWGLExtensions() nothrow
 	WGL_EXT_swap_control_tear = false;
 }
 
-/*
-  ext must be a null terminated string
-*/
-private bool isWGLExtSupported(const(char)* ext)
+// extension must be a null terminated string
+private bool isWGLExtSupported(const(char)* extension)
 {
-	if (isExtPresent(ext, wglGetExtensionsStringARB(wglGetCurrentDC())))
-	{
-		info("WGL Extension found: %s", cstr2dstr(ext));
+	auto extensionList = wglGetExtensionsStringARB(wglGetCurrentDC());
+	if (isExtSupported(extension, extensionList)) {
+		info("WGL Extension found: %s", cstr2dstr(extension));
 		return true;
 	}
-	warning("WGL Extension not found: %s", cstr2dstr(ext));
+	warning("WGL Extension not found: %s", cstr2dstr(extension));
 	return false;
 }
 

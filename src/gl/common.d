@@ -1,12 +1,27 @@
 module gl.common;
 
-import cstr;
-import gl.common;
-import gl.core;
-import log;
-import matrix;
-import std.math;
-import vector;
+import std.c.string;
+import gl.core, gl.ext: GL_INVALID_FRAMEBUFFER_OPERATION;
+import cstr, log;
+
+/*
+	Search extension in extensionList
+	extension and extensionList must be null terminated strings
+*/
+bool isExtSupported(const(char)* extension, const(char)* extensionList) nothrow
+{
+	if (extension && extensionList) {
+		auto length = strlen(extension);
+		extensionList = strstr(extensionList, extension);
+		while (extensionList) {
+			if (extensionList[length] == ' ' || extensionList[length] == '\0') {
+				return true;
+			}
+			extensionList = strstr(extensionList + length, extension);
+		}
+	}
+	return false;
+}
 
 void printOpenGLInfo()
 {
@@ -19,11 +34,9 @@ void printOpenGLInfo()
 void checkOpenGLError()
 {
 	GLenum errorCode = glGetError();
-	if(errorCode != GL_NO_ERROR)
-	{
+	if (errorCode != GL_NO_ERROR) {
 		string errorString;
-		switch(errorCode)
-		{
+		switch(errorCode) {
 		case GL_INVALID_ENUM:
 			errorString = "invalid enum";
 			break;
@@ -42,9 +55,9 @@ void checkOpenGLError()
 		case GL_OUT_OF_MEMORY:
 			errorString = "out of memory";
 			break;
-		/*case GL_INVALID_FRAMEBUFFER_OPERATION:
+		case GL_INVALID_FRAMEBUFFER_OPERATION:
 			errorString = "invalid framebuffer operation";
-			break;*/
+			break;
 		default:
 			errorString = "unknow";
 		}

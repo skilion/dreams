@@ -142,7 +142,7 @@ public:
 		editor = new Editor(world.root);
 
 		// --------------------------
-		setState(State.playing);
+		setState(State.edit);
 		skybox.texnum = 1;
 		// --------------------------
 
@@ -427,7 +427,7 @@ public:
 			}
 			break;
 		case MouseButton.middle:
-			textureId = world.root.getBlock(point[0], point[1], point[2]).data0;
+			textureId = world.root.getBlock(point[0], point[1], point[2]).tex;
 			break;
 		case MouseButton.scrollUp:
 			if (textureId < 255) textureId++;
@@ -576,10 +576,15 @@ public:
 				demoState++;
 				launchFireworks(Vec3f(670, 260, 600), Vec3f(870, 310, 800), 10);
 			}
-		} else if (cumulativeTime <= 200) {
+		} else if (cumulativeTime <= 175) {
 			if (demoState != 13) {
-				demoState = 13;
+				demoState++;
 				rainParticleSystem.addEmitter(&rainEmitter);
+			}
+		} else if (cumulativeTime <= 200) {
+			if (demoState != 14) {
+				demoState++;
+				ef.push(new Fade(ctx, black, white, 1.0f));
 			}
 		}
 	}

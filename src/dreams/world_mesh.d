@@ -108,7 +108,7 @@ struct WorldMesh
 		uint visibleFaces = testVisibleFaces(
 			near[04], near[22], near[10], near[16], near[12], near[14]
 		);
-		ushort texture = near[13].data0;
+		ushort texture = near[13].tex;
 		ushort s = (texture & 15) * tileSize; // texture % 16 * tileSize;
 		ushort t = cast(ushort) ((texture >> 4) * tileSize); // texture / 16 * tileSize);
 		int base = 0; // base index in blockVertices[]

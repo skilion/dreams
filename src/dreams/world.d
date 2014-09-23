@@ -8,11 +8,9 @@ struct WorldBlock
 	union {
 		struct {
 			ubyte id;
-			ubyte data0;
-			ubyte data1;
-			ubyte data2;
+			ubyte tex;
 		}
-		ushort dword;
+		ushort compact;
 	}
 
 	bool isSolid()
@@ -68,7 +66,7 @@ struct WorldChunk
 	private bool isEmpty()
 	{
 		for (int i = 0; i < chunkSize ^^ 3; i++) {
-			if ((cast(WorldBlock*) (blocks.ptr))[i].dword != 0) {
+			if ((cast(WorldBlock*) (blocks.ptr))[i] != WorldBlock.init) {
 				return false;
 			}
 		}

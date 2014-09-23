@@ -187,7 +187,7 @@ private:
 				WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
 				WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB,
 				WGL_COLOR_BITS_ARB, colorDepth,
-				WGL_DEPTH_BITS_ARB, 24,
+				WGL_DEPTH_BITS_ARB, 16,
 				WGL_STENCIL_BITS_ARB, 8,
 			];
 			if (multisampling > 0) {
