@@ -90,11 +90,13 @@ private struct FxaaShader
 {
 	Shader shader;
 	ShaderUniform texture;
+	ShaderUniform inverseVP;
 
 	void init(Renderer renderer)
 	{
 		shader = renderer.findShader("fxaa");
 		texture = renderer.getShaderUniform(shader, "texture");
+		inverseVP = renderer.getShaderUniform(shader, "inverseVP");
 	}
 }
 
@@ -207,29 +209,33 @@ public:
 	void endFrame()
 	{
 		checkOpenGLError();
+		window.swapBuffers();
+	}
+
+	void fxaa() // HACK: direct rederer call
+	{
+		checkOpenGLError();
+		glDisable(GL_DEPTH_TEST);
+		glDepthMask(GL_FALSE); // disable depth buffer writing
 		glBindTexture(GL_TEXTURE_2D, screenTexture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, window.width, window.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, null); // HACK
 		glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, window.width, window.height);
-		checkOpenGLError();
-		glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT);
 		glBindTexture(GL_TEXTURE_2D, screenTexture);
-		checkOpenGLError();
 		fxaaShader.shader.use();
-		checkOpenGLError();
 		fxaaShader.texture.setInteger(0);
-		checkOpenGLError();
+		fxaaShader.inverseVP.setVec2(1.0f / window.width, 1.0f / window.height);
 		glBindBuffer(GL_ARRAY_BUFFER, quadVertexBuffer);
-		checkOpenGLError();
 		glVertexAttribPointer(attribPositionIndex, 2, GL_FLOAT, GL_FALSE, 0, null);
-		checkOpenGLError();
 		glDisableVertexAttribArray(attribNormalIndex);
 		glDisableVertexAttribArray(attribTexcoordIndex);
 		glDisableVertexAttribArray(attribColorIndex);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-		checkOpenGLError();
 		glEnableVertexAttribArray(attribNormalIndex);
 		glEnableVertexAttribArray(attribTexcoordIndex);
 		glEnableVertexAttribArray(attribColorIndex);
-		window.swapBuffers();
+		glDepthMask(GL_TRUE); // enable depth buffer writing
+		glEnable(GL_DEPTH_TEST);
 	}
 
 	Shader findShader(string name)
@@ -510,6 +516,12 @@ public:
 	{
 		assert(type == GL_FLOAT);
 		glUniform1f(location, value);
+	}
+
+	void setVec2(float x, float y)
+	{
+		assert(type == GL_FLOAT_VEC2);
+		glUniform2f(location, x, y);
 	}
 
 	void setVec3f(const ref Vec3f vector)

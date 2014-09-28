@@ -66,25 +66,31 @@ class Fade: Effect
 
 class StarField: Effect
 {
-	private GraphicsContext ctx;
-	private Xorshift rnd;
-	private float duration; // no star is created if it's less than zero
-	private float change; // if change < 0, all stars become colorful
-	private static float minTime = 2.0f;
-	private static float maxTime = 3.0f; // max time needed to reach full brightness
+private:
+	GraphicsContext ctx;
+	Xorshift rnd;
+	Vec4f bgColor;
+	Vec4f starColor;
+	float duration; // no star is created if it's less than zero
+	float change; // if change < 0, all stars become colorful
+	static float minTime = 2.0f;
+	static float maxTime = 3.0f; // max time needed to reach full brightness
 
-	private struct Star {
+	struct Star {
 		int size;
 		float time = 0;
 		float x = -1, y = -1;
 	}
 
-	private Star[] stars;
+	Star[] stars;
 
-	this(GraphicsContext ctx, uint count, float duration, float change)
+public:
+	this(GraphicsContext ctx, Vec4f bgColor, Vec4f starColor, uint count, float duration, float change)
 	{
 		assert(change < duration);
 		this.ctx = ctx;
+		this.bgColor = bgColor;
+		this.starColor = starColor;
 		this.duration = duration;
 		this.change = change;
 		stars = new Star[count];
@@ -114,16 +120,16 @@ class StarField: Effect
 
 	void draw()
 	{
-		ctx.setColor(black);
+		ctx.setColor(bgColor);
 		ctx.drawFilledRect(0, 0, int.max, int.max);
 		foreach (ref star; stars) {
 			if (change >= 0) {
-				ctx.setColor(mix(white, black, star.time * (1 / maxTime)));
+				ctx.setColor(mix(starColor, bgColor, star.time * (1 / maxTime)));
 			} else {
 				immutable float s = 0.01f; // slowing factor
-				float a = star.x * s;// * star.size;
-				float b = star.y * s;// * star.size;
-				float c = star.x * star.y * s * s;// * star.size;
+				float a = star.x * s;
+				float b = star.y * s;
+				float c = star.x * star.y * s * s;
 				ctx.setColor(Vec4f(fabs(sin(a)), fabs(sin(b)), fabs(sin(c)), 1.0f));
 			}
 			ctx.drawFilledRect(cast(int) star.x, cast(int) star.y, star.size, star.size);
@@ -133,7 +139,7 @@ class StarField: Effect
 	private Star createStar(float width, float height)
 	{
 		Star star;
-		star.size = cast(uint) dice(rnd, 0, 40, 30, 20, 10);
+		star.size = uniform!"[]"(1, 10, rnd);
 		star.time = uniform!"[]"(minTime, maxTime, rnd);
 		star.x = uniform!"[]"(0, width, rnd);
 		star.y = uniform!"[]"(0, height, rnd);
@@ -271,6 +277,44 @@ class Fireflies2: Effect
 		f.y = uniform!"[]"(-100, height + 100, rnd);
 		f.size = uniform!"[]"(height / 40, height / 4, rnd);
 		return f;
+	}
+}
+
+class Credits: Effect
+{
+private:
+	GraphicsContext ctx;
+	Vec4f color;
+	Font font;
+	float time = 0;
+	float duration;
+	string text;
+
+public:
+	this(GraphicsContext ctx, Font font, float duration, string text)
+	{
+		this.ctx = ctx;
+		this.font = font;
+		this.duration = duration;
+		this.text = text;
+	}
+
+	bool update(float time)
+	{
+		this.time += time;
+		return this.time < duration;
+	}
+
+	void draw()
+	{
+		int w, h;
+		ctx.getSize(w, h);
+		ctx.setColor(black);
+		ctx.drawFilledRect(0, 0, int.max, int.max);
+		ctx.setColor(white);
+		ctx.setColor(mix(black, white, sin(time / duration * PI)));
+		int textWidth = ctx.getStringWidth(font, text);
+		ctx.drawString(font, text, (w - textWidth) / 2, h / 3);
 	}
 }
 

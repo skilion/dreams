@@ -10,10 +10,10 @@ import log, matrix, renderer, vector;
 private immutable wordFilename = "world.z";
 
 private immutable Vec4f[4] fireworkColors = [
-	Vec4f(1.0f, 0.2f, 0.2f, 0.8f),
-	Vec4f(0.6f, 1.0f, 0.8f, 0.8f),
-	Vec4f(0.9f, 0.8f, 0.1f, 0.8f),
-	Vec4f(0.9f, 0.8f, 0.5f, 0.8f)
+	Vec4f(1.0f, 0.2f, 0.2f, 1),
+	Vec4f(0.6f, 1.0f, 0.8f, 1),
+	Vec4f(0.9f, 0.8f, 0.1f, 1),
+	Vec4f(0.5f, 1.0f, 0.5f, 1)
 ];
 
 final class Demo: Engine
@@ -45,7 +45,7 @@ private:
 	State state;
 
 	// demo variables
-	struct Firework { // simply an emitter with specific life
+	struct Firework { // an emitter with limited life
 		Emitter* emitter;
 		float delay, life;
 	}
@@ -54,6 +54,8 @@ private:
 	float cumulativeTime = 0;
 	int demoState = 0;
 	Firework[] fireworks;
+	bool reduceSkybox;
+	float skyboxTime;
 
 	// editor variables
 	enum EditMode {
@@ -83,7 +85,7 @@ public:
 		rainParticleSystem = new ParticleSystem(300);
 
 		fireworksParticleSystem.particleSize = Vec2f(0.5f, 0.5f);
-		rainParticleSystem.particleSize = Vec2f(0.02f, 0.8f);
+		rainParticleSystem.particleSize = Vec2f(0.05f, 0.8f);
 		rainEmitter.minSize = -20;
 		rainEmitter.maxSize = 20;
 		rainEmitter.rate = 500;
@@ -94,7 +96,7 @@ public:
 		rainEmitter.vibrationY = 0;
 		rainEmitter.vibrationZ = 0;
 		rainEmitter.weight = 1;
-		rainEmitter.color = Vec4f(0.6f, 0.8f, 0.9f, 0.5f);
+		rainEmitter.color = Vec4f(0.6f, 0.8f, 0.9f, 1);
 	}
 
 	~this()
@@ -128,22 +130,20 @@ public:
 		mainMusicSource = audio.getSource();
 		mainMusicSource.setSound(mainMusic);
 
-		//rainParticleSystem.particleTexture = renderer.loadTexture("rain.png", TextureFilter.trilinear, TextureWrap.clamp);
 		pm.addParticleSystem(fireworksParticleSystem);
 		pm.addParticleSystem(rainParticleSystem);
-
-		// editor camera
-		player.setFlag(Player.Flag.noclip);
-		player.position = Vec3f(769.5f, 256, 1006);
-		freeCamera.yaw = 0 * PI / 180;
 
 		load(wordFilename);
 		worldRenderer.setWorldRoot(world.root);
 		editor = new Editor(world.root);
 
 		// --------------------------
-		setState(State.edit);
+		setState(State.playing);
 		skybox.texnum = 1;
+		// editor camera
+		player.setFlag(Player.Flag.noclip);
+		player.position = Vec3f(769.5f, 256, 1006);
+		freeCamera.yaw = 0 * PI / 180;
 		// --------------------------
 
 		// start with a black screen
@@ -205,6 +205,8 @@ public:
 		imm.setView(view);
 		pm.draw();
 
+		renderer.fxaa();
+
 		// 2D effects
 		ef.draw();
 
@@ -233,6 +235,7 @@ public:
 			// user interface
 			drawUI();
 		}
+
 		imm.flush();
 		ctx.flush();
 	}
@@ -275,6 +278,14 @@ public:
 		// set the rain emitter always over the camera
 		rainEmitter.position = camera.position;
 		rainEmitter.position.y += 20;
+
+		// reaching the infinite effect
+		if (reduceSkybox) {
+			skyboxTime += time * 0.6f;
+			skybox.m = translationMatrix(0, -(1 - exp(-skyboxTime * 0.5f)) * 6.5f, skyboxTime);
+		} else {
+			skybox.m = Mat4f.init;
+		}
 
 		if (state == State.edit) {
 			// editor selection
@@ -453,7 +464,7 @@ public:
 	void demoManager(float time)
 	{
 		if (demoState == 0) {
-			immutable float sec = 122; // DEV: jump to precise moment
+			immutable float sec = 0; // DEV: jump to precise moment
 			mainMusicSource.seekTime(sec);
 			cumulativeTime = sec;
 			mainMusicSource.play();
@@ -470,7 +481,8 @@ public:
 				ef.push(new Fade(ctx, white, black, 4.0f));
 				// begin preloading chunks
 				camera.position = Vec3f(135.5f, 516, 0.5f);
-				camera.yaw = 180 * PI / 180;
+				camera.pitch = camera.targetPitch = 0;
+				camera.yaw = camera.targetYaw = 180 * PI / 180;
 			}
 		} else if (cumulativeTime <= 17.5f) {
 			if (demoState != 2) {
@@ -490,7 +502,7 @@ public:
 				ef.clear();
 				ef.push(new Fade(ctx, black, white, 0.5f));
 				ef.push(new Fade(ctx, white, black, 0.5f));
-				ef.push(new StarField(ctx, 100, 17, 7.8f));
+				ef.push(new StarField(ctx, black, white, 100, 17, 7.8f));
 			}
 		} else if (cumulativeTime <= 85.8f) {
 			if (demoState != 4) {
@@ -500,6 +512,7 @@ public:
 				ef.push(new Fade(ctx, white, transparent, 0.5f));
 				skybox.texnum = 0;
 				camera.position = Vec3f(135.5f, 516, 0.5f);
+				camera.pitch = camera.targetPitch = 0;
 				camera.yaw = camera.targetYaw = 180 * PI / 180;
 				camera.clearPath();
 				camera.addPathNode(Vec3f(135.5f, 516, 355));
@@ -534,6 +547,7 @@ public:
 				ef.push(new Blank(ctx, black, 1000));
 				// begin preloading chunks for the next event
 				camera.position = Vec3f(769.5f, 256, 1006);
+				camera.pitch = camera.targetPitch = 0;
 				camera.yaw = camera.targetYaw = 0;
 			}
 		} else if (cumulativeTime <= 126.5f) {
@@ -543,13 +557,19 @@ public:
 				ef.push(new Fade(ctx, black, transparent, 0.5f));
 				skybox.texnum = 1;
 				camera.position = Vec3f(769.5f, 256, 1006);
+				camera.pitch = camera.targetPitch = 0;
 				camera.yaw = camera.targetYaw = 0;
 				camera.clearPath();
 				camera.addPathNode(Vec3f(769.5f, 256, 980));
 				camera.addPathNode(Vec3f(770.0f, 260, 920));
 				camera.addPathNode(Vec3f(769.5f, 260, 800));
 				camera.addPathNode(Vec3f(769.5f, 256, 750));
-				camera.addPathNode(Vec3f(769.5f, 256, 400));
+				camera.addPathNode(Vec3f(769.5f, 256, 490));
+				// up
+				camera.addPathNode(Vec3f(769.5f, 260, 480));
+				camera.addPathNode(Vec3f(769.5f, 270, 475));
+				camera.addPathNode(Vec3f(769.5f, 290, 470));
+				camera.addPathNode(Vec3f(769.5f, 300, 470));
 			}
 		} else if (cumulativeTime <= 131) {
 			if (demoState != 8) {
@@ -561,7 +581,7 @@ public:
 				demoState++;
 				launchFireworks(Vec3f(670, 250, 720), Vec3f(870, 300, 880), 10);
 			}
-		} else if (cumulativeTime <= 139.5f) {
+		} else if (cumulativeTime <= 139.4f) {
 			if (demoState != 10) {
 				demoState++;
 				launchFireworks(Vec3f(670, 250, 750), Vec3f(870, 300, 850), 10);
@@ -576,15 +596,45 @@ public:
 				demoState++;
 				launchFireworks(Vec3f(670, 260, 600), Vec3f(870, 310, 800), 10);
 			}
-		} else if (cumulativeTime <= 175) {
+		} else if (cumulativeTime <= 176) {
 			if (demoState != 13) {
 				demoState++;
 				rainParticleSystem.addEmitter(&rainEmitter);
 			}
-		} else if (cumulativeTime <= 200) {
+		} else if (cumulativeTime <= 189) {
 			if (demoState != 14) {
 				demoState++;
-				ef.push(new Fade(ctx, black, white, 1.0f));
+				reduceSkybox = true;
+				skyboxTime = 0;
+			}
+		} else if (cumulativeTime <= 191) {
+			if (demoState != 15) {
+				demoState++;
+				rainParticleSystem.removeEmitter(&rainEmitter);
+			}
+		} else if (cumulativeTime <= 192) {
+			if (demoState != 16) {
+				demoState = 16;
+				ef.clear();
+				ef.push(new Fade(ctx, transparent, white, 1));
+			}
+		} else if (cumulativeTime <= 224) {
+			if (demoState != 17) {
+				demoState = 17;
+				reduceSkybox = false;
+				ef.push(new Blank(ctx, white, 1));
+				ef.push(new StarField(ctx, white, black, 50, 18, 15));
+				ef.push(new Fade(ctx, white, black, 1));
+				ef.push(new Blank(ctx, black, 1));
+				ef.push(new Credits(ctx, defaultFont, 3, "We're Made of Dreams"));
+				ef.push(new Credits(ctx, defaultFont, 3, "Programming and Art by Andrea Radaelli"));
+				ef.push(new Credits(ctx, defaultFont, 3, "Music by Matteo Medici"));
+				ef.push(new Blank(ctx, black, 1000));
+			}
+		} else if (cumulativeTime <= 1000) {
+			if (demoState != 18) {
+				demoState = 18;
+				exit();
 			}
 		}
 	}

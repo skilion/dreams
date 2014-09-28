@@ -102,10 +102,14 @@ struct ControlledFpsCamera
 					// probably not the optimal way to to this ...
 					Vec3f d2 = (path[1] - path[0]).normalize();
 					addPitch = asin(d2.y - delta.y);
-					addYaw = acos(Vec2f(delta.z, delta.x).dot(Vec2f(d2.z, d2.x)));
-					addYaw = copysign(addYaw, delta.z * d2.x - delta.x * d2.z);
 					targetPitch += addPitch;
-					targetYaw += addYaw;
+					auto a = Vec2f(delta.z, delta.x);
+					auto b = Vec2f(d2.z, d2.x);
+					if ((a.x != 0 || a.y != 0) && (b.x != 0 || b.y != 0)) { // prevent degenerate vectors
+						addYaw = acos(a.normalize().dot(b.normalize()));
+						addYaw = copysign(addYaw, delta.z * d2.x - delta.x * d2.z);
+						targetYaw += addYaw;
+					}
 				}
 				path = path[1 .. $];
 			} else {

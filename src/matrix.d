@@ -199,6 +199,15 @@ Mat4f rotZMatrix(float rad)
 	return matrix;
 }
 
+Mat4f scaleMatrix(float x, float y, float z)
+{
+	Mat4f matrix;
+	matrix.m11 = x;
+	matrix.m22 = y;
+	matrix.m33 = z;
+	return matrix;
+}
+
 Mat4f frustumMatrix(float left, float right, float bottom, float top, float near, float far)
 {
 	Mat4f matrix;

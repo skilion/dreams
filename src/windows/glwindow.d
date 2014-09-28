@@ -93,11 +93,13 @@ public:
 		SetActiveWindow(hWnd);
 		centerCursor(hWnd);
 		clipCursorWnd(hWnd);
+		ShowCursor(FALSE);
 	}
 
 	void unlockPointer()
 	{
 		pointerLocked = false;
+		ShowCursor(TRUE);
 	}
 
 	void pollEvents()
@@ -265,11 +267,9 @@ private:
 	}
 }
 
-package:
-
 private immutable char* glWndClassName = "OpenGLWindowClass";
 
-void registerWndClass(HINSTANCE hInstance)
+package void registerWndClass(HINSTANCE hInstance)
 {
 	WNDCLASSEXA wc;
 	wc.cbSize = WNDCLASSEXA.sizeof;
@@ -286,14 +286,12 @@ void registerWndClass(HINSTANCE hInstance)
 	}
 }
 
-void unregisterWndClass(HINSTANCE hInstance)
+package void unregisterWndClass(HINSTANCE hInstance)
 {
 	UnregisterClassA(glWndClassName, hInstance);
 }
 
-private:
-
-extern (Windows) LRESULT WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) nothrow
+private extern (Windows) LRESULT WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) nothrow
 {
 	auto window = cast(OpenGLWindow) cast(void*) GetWindowLongA(hWnd, GWL_USERDATA);
 	auto engine = window ? window.engine : null;
@@ -498,17 +496,20 @@ extern (Windows) LRESULT WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 		}
 		break;
 
-	case WM_ENTERSIZEMOVE:
+	case WM_NCLBUTTONDOWN:
+	case WM_ENTERSIZEMOVE: // useless as we intercept every click on the client area
 		//SetTimer(hWnd, 100, 15, &TimerProc);
 		scope (failure) return 0;
-		engine.audio.suspend();
-		return 0;
+		engine.suspend();
+		break; // do not process this event
 
-	case WM_EXITSIZEMOVE:
+	case WM_NCLBUTTONUP: // does not seem to be intercepted by Windows
+	case WM_NCMOUSEMOVE: // HACK: workaround for WM_NCLBUTTONUP
+	case WM_EXITSIZEMOVE: // useless
 		//KillTimer(hWnd, 100);
 		scope (failure) return 0;
-		engine.audio.resume();
-		return 0;
+		engine.resume();
+		break; // do not process this event
 
 	default:
 	}
@@ -517,14 +518,10 @@ extern (Windows) LRESULT WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 }
 
 /*
-VOID TimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
+TIMERPROC TimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 {
-	scope (failure) {
-		scope (failure) return;
-		KillTimer(hWnd, idEvent);
-		return;
-	}
-	gEngine.frame();
+	scope (failure) KillTimer(hWnd, idEvent);
+	engine.frame();
 }
 */
 

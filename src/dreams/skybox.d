@@ -27,6 +27,7 @@ struct Skybox
 	VertexBuffer vertexBuffer;
 	Texture textures[2];
 	int texnum;
+	Mat4f m; // additional matrix for external effects
 
 	void init(Renderer renderer)
 	{
@@ -54,7 +55,7 @@ struct Skybox
 		renderer.setShader(skyboxShader.shader);
 		skyboxShader.texture.setInteger(0);
 		auto translation = translationMatrix(view.position.x, view.position.y, view.position.z);
-		auto mvp = view.vp * translation;
+		auto mvp = view.vp * translation * m;
 		skyboxShader.mvp.setMat4f(mvp);
 		renderer.setTexture(textures[texnum]);
 		renderer.draw(indexBuffer, skyboxIndices.length, vertexBuffer);

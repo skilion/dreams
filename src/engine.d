@@ -35,7 +35,9 @@ class Engine
 
 	private {
 		OpenGLWindow window;
+		TickDuration gameTime;
 		bool running; // false if the engine is going to exit at the end of the frame
+		bool suspended;
 	}
 
 public:
@@ -100,7 +102,6 @@ public:
 
 		int fpsCounter = 0;
 		TickDuration lastFpsUpdateTime;
-		TickDuration gameTime;
 		lastFpsUpdateTime = gameTime = Clock.currSystemTick();
 
 		StopWatch frameStopWatch;
@@ -173,6 +174,21 @@ public:
 		running = false;
 	}
 
+	final void suspend()
+	{
+		suspended = true;
+		audio.suspend();
+	}
+
+	final void resume()
+	{
+		if (suspended) {
+			suspended = false;
+			audio.resume();
+			gameTime = Clock.currSystemTick(); // forget about the suspended time
+		}
+	}
+
 	abstract protected void render();
 	abstract protected void update(float time);
 
@@ -192,7 +208,7 @@ public:
 
 	private void writeConfig()
 	{
-		try write("config.json", config.toPrettyString());
-		catch warning("Can't write the config file");
+		/*try write("config.json", config.toPrettyString());
+		catch warning("Can't write the config file");*/
 	}
 }
