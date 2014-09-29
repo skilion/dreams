@@ -276,7 +276,7 @@ package void registerWndClass(HINSTANCE hInstance)
 	wc.style = CS_VREDRAW | CS_HREDRAW | CS_OWNDC;
 	wc.lpfnWndProc = &WndProc;
 	wc.hInstance = hInstance;
-	wc.hIcon = LoadIconA(hInstance, cast(LPSTR) 101);
+	wc.hIcon = LoadIconA(hInstance, cast(LPSTR) 100);
 	wc.hbrBackground = GetStockObject(BLACK_BRUSH);
 	wc.hCursor = LoadCursorA(null, IDC_ARROW);
 	wc.lpszClassName = glWndClassName;

@@ -89,10 +89,6 @@ struct ControlledFpsCamera
 			yaw += addYaw;
 			addPitch = 0;
 			addYaw = 0;*/
-			if (pitch > targetPitch + lockAngle) pitch = targetPitch + lockAngle;
-			if (pitch < targetPitch - lockAngle) pitch = targetPitch - lockAngle;
-			if (yaw > targetYaw + lockAngle) yaw = targetYaw + lockAngle;
-			if (yaw < targetYaw - lockAngle) yaw = targetYaw - lockAngle;
 			Vec3f delta = (path[0] - position);
 			float m = delta.magnitude();
 			delta /= m;
@@ -116,6 +112,12 @@ struct ControlledFpsCamera
 				position += delta * speed * time;
 			}
 		}
+
+		// camera lock
+		if (pitch > targetPitch + lockAngle) pitch = targetPitch + lockAngle;
+		if (pitch < targetPitch - lockAngle) pitch = targetPitch - lockAngle;
+		if (yaw > targetYaw + lockAngle) yaw = targetYaw + lockAngle;
+		if (yaw < targetYaw - lockAngle) yaw = targetYaw - lockAngle;
 
 		computeForwardVector();
 	}

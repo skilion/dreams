@@ -17,7 +17,7 @@ version (Windows)
 	//UINT timeEndPeriod(UINT);
 	int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 	{
-		//try
+		try
 		{
 			Runtime.initialize();
 			//timeBeginPeriod(0);
@@ -25,7 +25,7 @@ version (Windows)
 			//timeEndPeriod(0);
 			Runtime.terminate();
 		}
-		/*catch (Throwable t)
+		catch (Throwable t)
 		{
 			string str = t.toString();
 			auto msg = message(t.file, t.line, Logger.Message.Level.error, str);
@@ -33,7 +33,7 @@ version (Windows)
 			gLogger.flush();
 			MessageBoxA(null, str.toStringz(), "Error", MB_ICONEXCLAMATION);
 			return 1;
-		}*/
+		}
 
 		return 0;
 	}

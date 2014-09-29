@@ -139,7 +139,6 @@ public:
 
 		// --------------------------
 		setState(State.playing);
-		skybox.texnum = 1;
 		// editor camera
 		player.setFlag(Player.Flag.noclip);
 		player.position = Vec3f(769.5f, 256, 1006);
@@ -302,6 +301,12 @@ public:
 
 	void onKeyEvent(const KeyEvent* keyEvent)
 	{
+		switch (keyEvent.symbol) {
+		case KeySymbol.k_escape:
+			exit();
+			break;
+		default:
+		}
 		if (state == State.playing) return; // nothing to do
 
 		// free camera movement
@@ -569,7 +574,7 @@ public:
 				camera.addPathNode(Vec3f(769.5f, 260, 480));
 				camera.addPathNode(Vec3f(769.5f, 270, 475));
 				camera.addPathNode(Vec3f(769.5f, 290, 470));
-				camera.addPathNode(Vec3f(769.5f, 300, 470));
+				camera.addPathNode(Vec3f(769.5f, 800, 470));
 			}
 		} else if (cumulativeTime <= 131) {
 			if (demoState != 8) {
@@ -622,6 +627,7 @@ public:
 			if (demoState != 17) {
 				demoState = 17;
 				reduceSkybox = false;
+				camera.clearPath();
 				ef.push(new Blank(ctx, white, 1));
 				ef.push(new StarField(ctx, white, black, 50, 18, 15));
 				ef.push(new Fade(ctx, white, black, 1));

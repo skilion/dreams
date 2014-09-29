@@ -61,7 +61,7 @@
   <doHdrGeneration>0</doHdrGeneration>
   <hdrdir />
   <hdrname />
-  <doXGeneration>1</doXGeneration>
+  <doXGeneration>0</doXGeneration>
   <xfilename>$(IntDir)\$(TargetName).json</xfilename>
   <debuglevel>0</debuglevel>
   <debugids />
@@ -86,7 +86,7 @@
   <libfiles>gdi32.lib libaudio.lib libfreetype.lib libimage.lib libjpeg.lib libogg.lib libpng.lib libvorbis.lib libz.lib Openal32.lib</libfiles>
   <libpaths>lib</libpaths>
   <deffile />
-  <resfile />
+  <resfile>bin/resource.res</resfile>
   <exefile>$(OutDir)\$(ProjectName).exe</exefile>
   <useStdLibPath>1</useStdLibPath>
   <cRuntime>2</cRuntime>
@@ -156,7 +156,7 @@
   <doHdrGeneration>0</doHdrGeneration>
   <hdrdir />
   <hdrname />
-  <doXGeneration>1</doXGeneration>
+  <doXGeneration>0</doXGeneration>
   <xfilename>$(IntDir)\$(TargetName).json</xfilename>
   <debuglevel>0</debuglevel>
   <debugids />
@@ -181,7 +181,7 @@
   <libfiles>gdi32.lib libaudio.lib libfreetype.lib libimage.lib libjpeg.lib libogg.lib libpng.lib libvorbis.lib libz.lib Openal32.lib</libfiles>
   <libpaths>lib</libpaths>
   <deffile />
-  <resfile />
+  <resfile>bin/resource.res</resfile>
   <exefile>$(OutDir)\$(ProjectName).exe</exefile>
   <useStdLibPath>1</useStdLibPath>
   <cRuntime>1</cRuntime>
