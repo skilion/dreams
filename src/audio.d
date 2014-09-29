@@ -44,7 +44,7 @@ final class Audio
 		alcGetIntegerv(device, ALC_MAJOR_VERSION, 1, &alcMajor);
 		alcGetIntegerv(device, ALC_MINOR_VERSION, 1, &alcMinor);
 		info("OpenAL context version: %d.%d", alcMajor, alcMinor);
-		info("OpenAL context extensions: %s", cstr2dstr(alcGetString(device, ALC_EXTENSIONS)));
+		// info("OpenAL context extensions: %s", cstr2dstr(alcGetString(device, ALC_EXTENSIONS)));
 		alcGetIntegerv(device, ALC_MONO_SOURCES, 1, &monoSourcesNum);
 		dev("OpenAL context max mono sources: %d", monoSourcesNum);
 		alcGetIntegerv(device, ALC_STEREO_SOURCES, 1, &stereoSourcesNum);
@@ -53,7 +53,7 @@ final class Audio
 		info("OpenAL vendor: %s", cstr2dstr(alGetString(AL_VENDOR)));
 		info("OpenAL version: %s", cstr2dstr(alGetString(AL_VERSION)));
 		info("OpenAL renderer: %s", cstr2dstr(alGetString(AL_RENDERER)));
-		info("OpenAL extensions: %s", cstr2dstr(alGetString(AL_EXTENSIONS)));
+		// info("OpenAL extensions: %s", cstr2dstr(alGetString(AL_EXTENSIONS)));
 
 		sources.length = 32;
 		foreach (ref source; sources) source = new Source();

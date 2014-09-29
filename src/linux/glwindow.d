@@ -1,7 +1,7 @@
 module linux.glwindow;
 
 import deimos.X11.X, deimos.X11.Xatom, deimos.X11.Xlib, deimos.X11.Xutil;
-import gl.core;
+import gl.core, gl.ext;
 import linux.glx, linux.glxext, linux.init, linux.keysym;
 import std.string: toStringz;
 import cstr, engine, input, log;
@@ -14,16 +14,19 @@ enum {
 
 final class OpenGLWindow
 {
-	private Engine engine;
-	private GLXFBConfig fbConfig;
-	private XVisualInfo* visualInfo;
-	private Colormap colormap;
-	private Window window;
-	private GLXContext glContext;
+private:
+	Engine engine;
+	GLXFBConfig fbConfig;
+	XVisualInfo* visualInfo;
+	Colormap colormap;
+	Window window;
+	GLXContext glContext;
+	Cursor hiddenCursor;
 	// bool active;
 	// bool minimized;
-	private bool pointerLocked;
+	bool pointerLocked;
 
+public:
 	string title;
 	int width;
 	int height;
@@ -48,16 +51,25 @@ final class OpenGLWindow
 		createWindow();
 		createContext();
 		makeCurrent();
+		loadOpenGLExtensions();
 
 		if (GLX_EXT_swap_control) {
 			glXSwapIntervalEXT(display, window, GLX_EXT_swap_control_tear ? -1 : 1);
 		} else if (GLX_SGI_swap_control) {
 			glXSwapIntervalSGI(1); // NOTE: officially 0 is not supported
 		}
+
+		XColor color;
+		char[1] data = [0];
+		Pixmap bitmap = XCreateBitmapFromData(display, window, data.ptr, 1, 1);
+		hiddenCursor = XCreatePixmapCursor(display, bitmap, bitmap, &color, &color, 0, 0);
+		XFreePixmap(display, bitmap);
 	}
 
 	void destroy()
 	{
+		XFreeCursor(display, hiddenCursor);
+		unloadOpenGLExtensions();
 		destroyContext();
 		destroyWindow();
 	}
@@ -109,12 +121,14 @@ final class OpenGLWindow
 	void lockPointer()
 	{
 		pointerLocked = true;
+		XDefineCursor(display, window, hiddenCursor);
 		centerPointer(display, window);
 	}
 
 	void unlockPointer()
 	{
 		pointerLocked = false;
+		XUndefineCursor(display, window);
 	}
 
 	void pollEvents()

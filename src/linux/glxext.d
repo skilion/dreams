@@ -1,61 +1,42 @@
 module linux.glxext;
 
-import core.stdc.string;
-import cstr;
-import deimos.X11.X;
-import deimos.X11.Xlib;
-import deimos.X11.Xutil;
-import gl.core;
-import gl.ext;
-import linux.glx;
-import linux.init: display, screen;
-import linux.glloader;
-import log;
+import deimos.X11.X, deimos.X11.Xlib, deimos.X11.Xutil;
+import gl.common, gl.core;
+import linux.glx, linux.init, linux.glloader;
+import cstr, log;
 
 package void loadGLXExtensions()
 {
-	scope (failure) GLX_ARB_get_proc_address = false;
-	if (isGLXExtSupported("GLX_ARB_get_proc_address"))
-	{
+	scope (failure) return;
+
+	if (isGLXExtSupported("GLX_ARB_get_proc_address")) {
 		glXGetProcAddressARB = cast(PFNGLXGETPROCADDRESSARBPROC) glGetProcAddress("glXGetProcAddressARB");
 		GLX_ARB_get_proc_address = true;
 	}
 
-	scope (failure) GLX_ARB_create_context = false;
-	if (isGLXExtSupported("GLX_ARB_create_context"))
-	{
+	if (isGLXExtSupported("GLX_ARB_create_context")) {
 		glXCreateContextAttribsARB = cast(PFNGLXCREATECONTEXTATTRIBSARBPROC) glGetProcAddress("glXCreateContextAttribsARB");
 		GLX_ARB_create_context = true;
 	}
 
-	scope (failure) GLX_ARB_create_context_profile = false;
-	if (isGLXExtSupported("GLX_ARB_create_context_profile"))
-	{
+	if (isGLXExtSupported("GLX_ARB_create_context_profile")) {
 		GLX_ARB_create_context_profile = true;
 	}
 
-	scope (failure) GLX_ARB_multisample = false;
-	if (isGLXExtSupported("GLX_ARB_multisample"))
-	{
+	if (isGLXExtSupported("GLX_ARB_multisample")) {
 		GLX_ARB_multisample = true;
 	}
 
-	scope (failure) GLX_EXT_swap_control = false;
-	if (isGLXExtSupported("GLX_EXT_swap_control"))
-	{
+	if (isGLXExtSupported("GLX_EXT_swap_control")) {
 		glXSwapIntervalEXT = cast(PFNGLXSWAPINTERVALEXTPROC) glGetProcAddress("glXSwapIntervalEXT");
 		GLX_EXT_swap_control = true;
 	}
 
-	scope (failure) GLX_EXT_swap_control_tear = false;
-	if (isGLXExtSupported("GLX_EXT_swap_control_tear"))
-	{
+	if (isGLXExtSupported("GLX_EXT_swap_control_tear")) {
 		GLX_EXT_swap_control_tear = true;
 	}
 
-	scope (failure) GLX_SGI_swap_control = false;
-	if (isGLXExtSupported("GLX_SGI_swap_control"))
-	{
+	if (isGLXExtSupported("GLX_SGI_swap_control")) {
 		glXSwapIntervalSGI = cast(PFNGLXSWAPINTERVALSGIPROC) glGetProcAddress("glXSwapIntervalSGI");
 		GLX_SGI_swap_control = true;
 	}
@@ -77,7 +58,7 @@ package void unloadGLXExtensions() nothrow
 */
 private bool isGLXExtSupported(const(char)* ext)
 {
-	if (isExtPresent(ext, glXQueryExtensionsString(display, screen)))
+	if (isExtSupported(ext, glXQueryExtensionsString(display, screen)))
 	{
 		info("GLX Extension found: %s", cstr2dstr(ext));
 		return true;

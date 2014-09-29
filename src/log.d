@@ -14,8 +14,10 @@ static this()
 
 void dev(string file = __FILE__, int line = __LINE__, Args...)(const(char)[] fmt, Args args)
 {
-	Logger.Message msg = message(file, line, Logger.Message.Level.development, fmt, args);
-	gLogger.log(msg);
+	debug {
+		Logger.Message msg = message(file, line, Logger.Message.Level.development, fmt, args);
+		gLogger.log(msg);
+	}
 }
 
 void info(string file = __FILE__, int line = __LINE__, Args...)(const(char)[] fmt, Args args)

@@ -1,16 +1,11 @@
 module linux.init;
 
-import cstr;
-import deimos.X11.X;
-import deimos.X11.Xlib;
-import gl.core: loadOpenGLFunctions;
-import linux.glx;
-import linux.glxext;
-import linux.glloader;
-import log;
+import deimos.X11.X,deimos.X11.Xlib;
+import gl.core;
+import linux.glloader, linux.glx, linux.glxext;
+import cstr, log;
 
-package
-{
+package {
 	int errorLevel;  // incremented for every X error
 	Display *display;
 	int screen;
@@ -26,8 +21,7 @@ void sysInit()
 	loadGLXFunctions();
 
 	int errorBase, eventBase;
-	if (!glXQueryExtension(display, &errorBase, &eventBase))
-	{
+	if (!glXQueryExtension(display, &errorBase, &eventBase)) {
 		fatal("X server does not support the GLX extension (base error %d, base event %d)", errorBase, eventBase);
 	}
 

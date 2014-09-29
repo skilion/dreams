@@ -1,8 +1,6 @@
 module linux.glx;
 
-import deimos.X11.X;
-import deimos.X11.Xlib;
-import deimos.X11.Xutil;
+import deimos.X11.X, deimos.X11.Xlib, deimos.X11.Xutil;
 import gl.core;
 import linux.glloader;
 
