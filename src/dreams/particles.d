@@ -79,6 +79,7 @@ public:
 			if (particles[i].duration <= 0) {
 				swap(particles[i], particles[$ - 1]);
 				particles.length--;
+				assumeSafeAppend(particles);
 				continue;
 			}
 			particles[i].duration -= time;

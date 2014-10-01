@@ -38,7 +38,7 @@ final class WorldRenderer
 
 	private WorldChunk*[] chunksToBeRendered;
 
-	enum size_t maxChunkMeshMem = 256 * 2 ^^ 20;
+	enum size_t maxChunkMeshMem = 64 * 2 ^^ 20;
 	size_t chunkMeshMem;
 	int chunkMeshCount;
 	WorldChunk* first, last; // list of chunks with an allocated mesh
@@ -47,6 +47,7 @@ final class WorldRenderer
 	{
 		assert(renderer);
 		this.renderer = renderer;
+		chunksToBeRendered.reserve(512);
 	}
 
 	void init()
@@ -69,6 +70,7 @@ final class WorldRenderer
 			this.root = root;
 			destroyAllMeshes();
 			mesherThreads.length = 0;
+			assumeSafeAppend(mesherThreads);
 			for (int i = 0; i < mesherThreadsNum; i++) {
 				mesherThreads ~= spawn(&mesherThread, cast(immutable WorldNode*) root);
 			}
@@ -241,12 +243,8 @@ final class WorldRenderer
 		chunkMeshMem -= chunk.meshSize;
 		chunk.needUpdate = false;
 		chunk.waitingMesher = false;
-		//renderer.destroyVertexBuffer(chunk.vertexBuffer);
-		//renderer.destroyIndexBuffer(chunk.indexBuffer);
 		if (!chunk.indexBuffer) chunk.indexBuffer = renderer.createIndexBuffer();
 		if (!chunk.vertexBuffer) chunk.vertexBuffer = renderer.createVertexBuffer();
-		//chunk.indexBuffer = renderer.createIndexBuffer();
-		//chunk.vertexBuffer = renderer.createVertexBuffer();
 		renderer.updateIndexBuffer(chunk.indexBuffer, mesh.indices, BufferUsage.staticDraw);
 		chunk.indexCount = cast(int) mesh.indices.length;
 		renderer.updateVertexBuffer(chunk.vertexBuffer, mesh.vertices, BufferUsage.staticDraw);

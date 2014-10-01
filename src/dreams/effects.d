@@ -335,6 +335,7 @@ final class EffectSystem
 	void clear()
 	{
 		effects.length = 0;
+		assumeSafeAppend(effects);
 	}
 
 	void update(float time)
