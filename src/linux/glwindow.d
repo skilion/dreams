@@ -82,6 +82,7 @@ public:
 
 	void swapBuffers()
 	{
+		glFinish();
 		glXSwapBuffers(display, cast(GLXDrawable) window);
 	}
 

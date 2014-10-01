@@ -1,7 +1,9 @@
 DC = dmd
-DFLAGS = -debug -g -od./bin -of./bin/$@ -I./import -L-L./lib \
-	-L-laudio -L-ldl -L-lDX11-dmd -L-lfreetype -L-limage -L-ljpeg \
-	-L-lvorbis -L-logg -L-lopenal -L-lpng -L-lX11  -L-lz
+DFLAGS = -od./bin -of./bin/$@ -I./import -L-L./lib -L-laudio -L-ldl \
+	-L-lDX11-dmd -L-lfreetype -L-limage -L-ljpeg -L-lvorbis -L-logg \
+	-L-lopenal -L-lpng -L-lX11  -L-lz
+#DFLAGS += -debug -g
+DFLAGS += -boundscheck=off -inline -O -release
 
 SOURCES = \
 	src/dreams/camera.d \
