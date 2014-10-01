@@ -332,6 +332,8 @@ public:
 		glBindTexture(GL_TEXTURE_2D, texture);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, glTextureMagFilter[filter]);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, glTextureMinFilter[filter]);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, glTextureWrap[wrap]);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, glTextureWrap[wrap]);
 		if (filter == TextureFilter.atlas) {
 			glTexParameteri(GL_TEXTURE_2D, /*GL_GENERATE_MIPMAP*/ 0x8191, GL_TRUE);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 4); // HACK: prevent small mipmaps

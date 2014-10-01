@@ -55,9 +55,9 @@ void start(char[][] args)
 		FloatingPointControl fpctrl;
 		fpctrl.enableExceptions(FloatingPointControl.severeExceptions);
 	}
-	import core.memory;
+	/*import core.memory: GC;
 	GC.reserve(300 * 2^^20);
-	//GC.disable();
+	GC.disable();*/
 	auto demo = new Demo();
 	demo.run(args);
 }

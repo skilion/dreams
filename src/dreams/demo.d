@@ -136,20 +136,26 @@ public:
 		load(wordFilename);
 		worldRenderer.setWorldRoot(world.root);
 		editor = new Editor(world.root);
-
-		// --------------------------
 		setState(State.playing);
-		// editor camera
+
+		// ********************************************************************
+		// UNCOMMENT THE FOLLOWING LINES TO ENABLE THE EDITOR
+		// ********************************************************************
+		/*
+		setState(State.edit);
 		player.setFlag(Player.Flag.noclip);
-		player.position = Vec3f(769.5f, 256, 1006);
-		freeCamera.yaw = 0 * PI / 180;
-		// --------------------------
+		player.position = Vec3f(135.5f, 516, 0.5f);
+		freeCamera.yaw = camera.targetYaw = 180 * PI / 180;
+		//player.position = Vec3f(769.5f, 256, 1006);
+		//freeCamera.yaw = 0 * PI / 180;
+		*/
 
 		// start with a black screen
 		if (state == State.playing) ef.push(new Blank(ctx, black, 1000));
 
-		// run gc before starting
-		core.memory.GC.collect();
+		// execute a garbage collection before starting
+		import core.memory: GC;
+		GC.collect();
 	}
 
 	override void shutdown()
