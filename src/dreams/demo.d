@@ -31,7 +31,7 @@ private:
 	Player player;
 	FpsCamera freeCamera;
 	ControlledFpsCamera camera;
-	
+
 	EffectSystem ef;
 	ParticleManager pm;
 	ParticleSystem fireworksParticleSystem;
@@ -268,6 +268,7 @@ public:
 					fireworksParticleSystem.removeEmitter(fireworks[i].emitter);
 					swap(fireworks[i], fireworks[$ - 1]);
 					fireworks.length--;
+					assumeSafeAppend(fireworks);
 					continue;
 				}
 				fireworks[i].life -= time;

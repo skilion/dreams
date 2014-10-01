@@ -24,6 +24,7 @@ final class Editor
 	void edit(const ref uint[3] min, const ref uint[3] max, WorldBlock block)
 	{
 		redoActions.length = 0;
+		assumeSafeAppend(redoActions);
 		undoActions ~= backup(min, max);
 		for (uint x = min[0]; x < max[0]; x++) {
 			for (uint y = min[1]; y < max[1]; y++) {
@@ -69,6 +70,7 @@ final class Editor
 		uint[3] max = clipboardSize;
 		max[] += pos[];
 		redoActions.length = 0;
+		assumeSafeAppend(redoActions);
 		undoActions ~= backup(pos, max);
 		write(pos, max, clipboard);
 	}
@@ -79,6 +81,7 @@ final class Editor
 			redoActions ~= backup(undoActions[$ - 1].min, undoActions[$ - 1].max);
 			restore(undoActions[$ - 1]);
 			undoActions.length--;
+			assumeSafeAppend(undoActions);
 		}
 	}
 
@@ -88,6 +91,7 @@ final class Editor
 			undoActions ~= backup(redoActions[$ - 1].min, redoActions[$ - 1].max);
 			restore(redoActions[$ - 1]);
 			redoActions.length--;
+			assumeSafeAppend(redoActions);
 		}
 	}
 

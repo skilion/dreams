@@ -65,6 +65,7 @@ public:
 			if (emitters[i] == emitter) {
 				swap(emitters[i], emitters[$ - 1]);
 				emitters.length--;
+				assumeSafeAppend(emitters);
 				return;
 			}
 		}
@@ -165,6 +166,7 @@ final class ParticleManager
 			if (systems[i] == system) {
 				swap(systems[i], systems[$ - 1]);
 				systems = systems[0 .. $ - 1];
+				assumeSafeAppend(systems);
 				return;
 			}
 		}

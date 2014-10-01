@@ -10,7 +10,7 @@ final class ZInFile
 	private static immutable chunk = 32 * 2 ^^ 10;
 	private void[chunk] src = void;
 	private const(void)[] extracted;
-	
+
 	this(string filename)
 	{
 		open(filename);
@@ -34,7 +34,7 @@ final class ZInFile
 			destroy(u);
 		}
 	}
-	
+
 	T[] rawRead(T)(T[] buffer)
 	{
 		size_t read, size = buffer.length * T.sizeof;
@@ -53,7 +53,7 @@ final class ZInFile
 		}
 		return buffer[0 .. read / T.sizeof];
 	}
-	
+
 	private void extract()
 	{
 		auto read = file.rawRead(src);
@@ -94,7 +94,7 @@ final class ZOutFile
 			destroy(c);
 		}
 	}
-	
+
 	void rawWrite(T)(in T[] buffer)
 	{
 		file.rawWrite(c.compress(buffer));
@@ -104,13 +104,13 @@ final class ZOutFile
 unittest
 {
 	import std.file;
-	
+
 	auto zout = new ZOutFile("__test");
 	foreach (i; 0 .. 1000) {
 		zout.rawWrite("aaaa");
 	}
 	zout.close();
-	
+
 	auto zin = new ZInFile("__test");
 	char[4] str;
 	foreach (i; 0 .. 1000) {
@@ -118,6 +118,6 @@ unittest
 		assert(str == "aaaa");
 	}
 	zin.close();
-	
+
 	remove("__test");
 }

@@ -34,6 +34,8 @@ struct Mesh
 	{
 		vertices.length = 0;
 		indices.length = 0;
+		assumeSafeAppend(vertices);
+		assumeSafeAppend(indices);
 	}
 
 	void reserve(size_t size)

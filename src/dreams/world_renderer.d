@@ -95,6 +95,7 @@ final class WorldRenderer
 		}
 
 		chunksToBeRendered.length = 0;
+		assumeSafeAppend(chunksToBeRendered);
 		findVisibleChunks(root);
 		drawChunks();
 
