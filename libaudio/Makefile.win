@@ -1,0 +1,14 @@
+CC = dmc
+CFLAGS = -c -6 -o+all -mn -D__CYGWIN__ -I../libogg/include -I../libvorbis/include
+
+OBJS = src/audio.obj
+
+.c.obj:
+	$(CC) $(CFLAGS) -o$@ $<
+
+libaudio: $(OBJS)
+	lib -c -n lib/libaudio.lib $(OBJS)
+
+clean:
+	erase /F /S *.obj
+	erase /F lib\libaudio.lib
