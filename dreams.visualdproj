@@ -83,7 +83,7 @@
   <cv2pdbOptions />
   <objfiles />
   <linkswitches />
-  <libfiles>gdi32.lib libaudio.lib libfreetype.lib libimage.lib libjpeg.lib libogg.lib libpng.lib libvorbis.lib libz.lib Openal32.lib</libfiles>
+  <libfiles>gdi32.lib libaudio.lib libfreetype.lib libimage.lib libjpeg.lib libogg.lib libpng.lib libvorbis.lib libvorbisfile.lib libz.lib Openal32.lib</libfiles>
   <libpaths>lib</libpaths>
   <deffile />
   <resfile>bin/resource.res</resfile>
@@ -178,7 +178,7 @@
   <cv2pdbOptions />
   <objfiles />
   <linkswitches />
-  <libfiles>gdi32.lib libaudio.lib libfreetype.lib libimage.lib libjpeg.lib libogg.lib libpng.lib libvorbis.lib libz.lib Openal32.lib</libfiles>
+  <libfiles>gdi32.lib libaudio.lib libfreetype.lib libimage.lib libjpeg.lib libogg.lib libpng.lib libvorbis.lib libvorbisfile.lib libz.lib Openal32.lib</libfiles>
   <libpaths>lib</libpaths>
   <deffile />
   <resfile>bin/resource.res</resfile>
