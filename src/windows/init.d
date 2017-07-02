@@ -1,8 +1,9 @@
 module windows.init;
 
+import core.sys.windows.wingdi;
 import gl.core, gl.ext;
 import windows.glloader, windows.glwindow;
-import windows.wgl, windows.wglext;
+import windows.wglext;
 import windows.windows;
 import log;
 
@@ -11,7 +12,6 @@ void sysInit()
 	hInstance = GetModuleHandleA(null);
 	SetThreadExecutionState(ES_CONTINUOUS | ES_AWAYMODE_REQUIRED | ES_DISPLAY_REQUIRED | ES_SYSTEM_REQUIRED);
 	loadLibGL();
-	loadWGLFunctions();
 	createDummyOpenGLContext();
 	loadOpenGLFunctions();
 	loadOpenGLExtensions();

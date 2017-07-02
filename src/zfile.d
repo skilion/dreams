@@ -1,6 +1,6 @@
 module zfile;
 
-import std.c.string: memcpy;
+import core.stdc.string: memcpy;
 import std.stdio, std.zlib;
 
 final class ZInFile

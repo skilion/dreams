@@ -1,6 +1,6 @@
 module engine;
 
-import core.thread;
+import core.thread, core.time;
 import std.datetime, std.file, std.json;
 import audio, input, log, renderer;
 
@@ -35,7 +35,7 @@ class Engine
 
 	private {
 		OpenGLWindow window;
-		TickDuration gameTime;
+		MonoTime gameTime;
 		bool running; // false if the engine is going to exit at the end of the frame
 		bool suspended;
 	}
@@ -58,15 +58,15 @@ public:
 		destroy(input);
 	}
 
-	protected void init()
+	protected void init(char[][] args)
 	{
 		readConfig();
 		try window.width = cast(int) (config.object["window"].object["width"].integer);
-		catch window.width = 0;
+		catch (Throwable) window.width = 0;
 		try window.height = cast(int) config["window"].object["height"].integer;
-		catch window.height = 0;
+		catch (Throwable) window.height = 0;
 		try window.fullscreen = config["window"].object["fullscreen"].type == JSON_TYPE.TRUE;
-		catch window.fullscreen = true;
+		catch (Throwable) window.fullscreen = true;
 
 		audio.init();
 		window.create();
@@ -94,15 +94,15 @@ public:
 		info("Engine started");
 		scope (exit) sysShutdown();
 		sysInit();
-		init();
-		immutable auto oneSecond = TickDuration.from!"seconds"(1);
+		init(args);
+		immutable auto oneSecond = dur!"seconds"(1);
 		immutable int simulationStep = 16;
 		immutable float simulationStepFloat = simulationStep / 1000.0f;
-		immutable auto simulationStepTick = TickDuration.from!"msecs"(simulationStep);
+		immutable auto simulationStepTick = dur!"msecs"(simulationStep);
 
 		int fpsCounter = 0;
-		TickDuration lastFpsUpdateTime;
-		lastFpsUpdateTime = gameTime = Clock.currSystemTick();
+		MonoTime lastFpsUpdateTime;
+		lastFpsUpdateTime = gameTime = MonoTime.currTime;
 
 		StopWatch frameStopWatch;
 		StopWatch inputStopWatch;
@@ -122,40 +122,42 @@ public:
 			inputStopWatch.stop();
 			inputTime = inputStopWatch.peek().msecs();
 
-			// audio update
-			audioStopWatch.reset();
-			audioStopWatch.start();
-			audio.update();
-			audioStopWatch.stop();
-			audioTime = audioStopWatch.peek().msecs();
+			if (!suspended) {
+				// audio update
+				audioStopWatch.reset();
+				audioStopWatch.start();
+				audio.update();
+				audioStopWatch.stop();
+				audioTime = audioStopWatch.peek().msecs();
 
-			// game simulation
-			simulationStopWatch.reset();
-			simulationStopWatch.start();
-			auto realTime = Clock.currSystemTick();
-			while (gameTime < realTime) {
-				// the game time is advanced by a fixed time slice
-				gameTime += simulationStepTick;
-				update(simulationStepFloat);
+				// game simulation
+				simulationStopWatch.reset();
+				simulationStopWatch.start();
+				auto realTime = MonoTime.currTime;
+				while (gameTime < realTime) {
+					// the game time is advanced by a fixed time slice
+					gameTime += simulationStepTick;
+					update(simulationStepFloat);
+				}
+				simulationStopWatch.stop();
+				simulationTime = simulationStopWatch.peek().msecs();
+
+				// rendering
+				renderer.beginFrame();
+				renderingStopWatch.reset();
+				renderingStopWatch.start();
+				render();
+				renderingStopWatch.stop();
+				renderingTime = renderingStopWatch.peek().msecs();
+				renderer.endFrame();
 			}
-			simulationStopWatch.stop();
-			simulationTime = simulationStopWatch.peek().msecs();
-
-			// rendering
-			renderer.beginFrame();
-			renderingStopWatch.reset();
-			renderingStopWatch.start();
-			render();
-			renderingStopWatch.stop();
-			renderingTime = renderingStopWatch.peek().msecs();
-			renderer.endFrame();
 
 			// frames per second
 			fpsCounter++;
-			if (Clock.currSystemTick() - oneSecond >= lastFpsUpdateTime) {
+			if (MonoTime.currTime - oneSecond >= lastFpsUpdateTime) {
 				fps = fpsCounter;
 				fpsCounter = 0;
-				lastFpsUpdateTime = Clock.currSystemTick();
+				lastFpsUpdateTime = MonoTime.currTime;
 			}
 
 			frameStopWatch.stop();
@@ -185,7 +187,7 @@ public:
 		if (suspended) {
 			suspended = false;
 			audio.resume();
-			gameTime = Clock.currSystemTick(); // forget about the suspended time
+			gameTime = MonoTime.currTime; // forget about the suspended time
 		}
 	}
 
@@ -208,7 +210,7 @@ public:
 
 	private void writeConfig()
 	{
-		/*try write("config.json", config.toPrettyString());
-		catch warning("Can't write the config file");*/
+		try write("config.json", config.toPrettyString());
+		catch (Throwable) warning("Can't write the config file");
 	}
 }

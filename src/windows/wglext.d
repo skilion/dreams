@@ -1,7 +1,8 @@
 module windows.wglext;
 
+import core.sys.windows.wingdi;
 import gl.common;
-import windows.glloader, windows.wgl, windows.windows;
+import windows.glloader, windows.windows;
 import cstr, log;
 
 package void loadWGLExtensions()

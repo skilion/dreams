@@ -25,7 +25,7 @@ struct Skybox
 	SkyboxShader skyboxShader;
 	IndexBuffer indexBuffer;
 	VertexBuffer vertexBuffer;
-	Texture textures[2];
+	Texture[2] textures;
 	int texnum;
 	Mat4f m; // additional matrix for external effects
 

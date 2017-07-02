@@ -59,40 +59,6 @@ enum: int {
 	DISP_CHANGE_BADDUALVIEW= -6
 }
 
-/* field selection bits */
-enum {
-	DM_ORIENTATION = 0x00000001L,
-	DM_PAPERSIZE = 0x00000002L,
-	DM_PAPERLENGTH = 0x00000004L,
-	DM_PAPERWIDTH = 0x00000008L,
-	DM_SCALE = 0x00000010L,
-	DM_POSITION = 0x00000020L,
-	DM_NUP = 0x00000040L,
-	DM_DISPLAYORIENTATION = 0x00000080L,
-	DM_COPIES = 0x00000100L,
-	DM_DEFAULTSOURCE = 0x00000200L,
-	DM_PRINTQUALITY = 0x00000400L,
-	DM_COLOR = 0x00000800L,
-	DM_DUPLEX = 0x00001000L,
-	DM_YRESOLUTION = 0x00002000L,
-	DM_TTOPTION = 0x00004000L,
-	DM_COLLATE = 0x00008000L,
-	DM_FORMNAME = 0x00010000L,
-	DM_LOGPIXELS = 0x00020000L,
-	DM_BITSPERPEL = 0x00040000L,
-	DM_PELSWIDTH = 0x00080000L,
-	DM_PELSHEIGHT = 0x00100000L,
-	DM_DISPLAYFLAGS = 0x00200000L,
-	DM_DISPLAYFREQUENCY = 0x00400000L,
-	DM_ICMMETHOD = 0x00800000L,
-	DM_ICMINTENT = 0x01000000L,
-	DM_MEDIATYPE = 0x02000000L,
-	DM_DITHERTYPE = 0x04000000L,
-	DM_PANNINGWIDTH = 0x08000000L,
-	DM_PANNINGHEIGHT = 0x10000000L,
-	DM_DISPLAYFIXEDOUTPUT = 0x20000000L
-}
-
 /*
  * Window field offsets for GetWindowLong()
  */
@@ -114,13 +80,6 @@ enum: int {
 	GWLP_HWNDPARENT = -8,
 	GWLP_USERDATA = -21,
 	GWLP_ID = -12
-}
-
-/* Device Parameters for GetDeviceCaps() */
-enum: int {
-	HORZRES = 8,  /* Horizontal width in pixels */
-	VERTRES = 10,  /* Vertical height in pixels */
-	BITSPIXEL = 12,  /* Number of bits per pixel */
 }
 
 /*
@@ -165,63 +124,6 @@ struct CREATESTRUCTA
 	DWORD dwExStyle;
 }
 alias CREATESTRUCTA* LPCREATESTRUCTA;
-
-enum CCHDEVICENAME = 32;
-enum CCHFORMNAME = 32;
-struct DEVMODEA
-{
-	BYTE dmDeviceName[CCHDEVICENAME];
-	WORD dmSpecVersion;
-	WORD dmDriverVersion;
-	WORD dmSize;
-	WORD dmDriverExtra;
-	DWORD dmFields;
-	union {
-		/* printer only fields */
-		struct {
-			short dmOrientation;
-			short dmPaperSize;
-			short dmPaperLength;
-			short dmPaperWidth;
-			short dmScale;
-			short dmCopies;
-			short dmDefaultSource;
-			short dmPrintQuality;
-		}
-		/* display only fields */
-		struct {
-			POINTL dmPosition;
-			DWORD  dmDisplayOrientation;
-			DWORD  dmDisplayFixedOutput;
-		}
-	}
-	short dmColor;
-	short dmDuplex;
-	short dmYResolution;
-	short dmTTOption;
-	short dmCollate;
-	BYTE   dmFormName[CCHFORMNAME];
-	WORD   dmLogPixels;
-	DWORD  dmBitsPerPel;
-	DWORD  dmPelsWidth;
-	DWORD  dmPelsHeight;
-	union {
-		DWORD dmDisplayFlags;
-		DWORD dmNup;
-	}
-	DWORD  dmDisplayFrequency;
-	DWORD  dmICMMethod;
-	DWORD  dmICMIntent;
-	DWORD  dmMediaType;
-	DWORD  dmDitherType;
-	DWORD  dmReserved1;
-	DWORD  dmReserved2;
-	DWORD  dmPanningWidth;
-	DWORD  dmPanningHeight;
-}
-alias DEVMODEA* PDEVMODEA;
-alias DEVMODEA* NPDEVMODEA;
-alias DEVMODEA* LPDEVMODEA;
 
 enum: DWORD {
 	ES_SYSTEM_REQUIRED = 0x00000001,

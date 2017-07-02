@@ -1,6 +1,6 @@
 module gl.common;
 
-import std.c.string;
+import core.stdc.string;
 import gl.core, gl.ext: GL_INVALID_FRAMEBUFFER_OPERATION;
 import cstr, log;
 

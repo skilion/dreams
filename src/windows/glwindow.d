@@ -1,9 +1,9 @@
 module windows.glwindow;
 
+import core.sys.windows.wingdi;
 import gl.core;
 import std.string: toStringz;
 import windows.vkeys;
-import windows.wgl;
 import windows.wglext;
 import windows.windows;
 import cstr;
@@ -278,7 +278,7 @@ package void registerWndClass(HINSTANCE hInstance)
 	wc.hInstance = hInstance;
 	wc.hIcon = LoadIconA(hInstance, cast(LPSTR) 100);
 	wc.hbrBackground = GetStockObject(BLACK_BRUSH);
-	wc.hCursor = LoadCursorA(null, IDC_ARROW);
+	wc.hCursor = LoadCursorA(null, cast(const char*) IDC_ARROW);
 	wc.lpszClassName = glWndClassName;
 
 	if (!RegisterClassExA(&wc)) {
@@ -396,7 +396,7 @@ private extern (Windows) LRESULT WndProc(HWND hWnd, UINT message, WPARAM wParam,
 
 		keyEvent.utfCode = 0;
 		int length = ToUnicode(
-			wParam,
+			cast(UINT) wParam,
 			scanCode,
 			keyboardState.ptr,
 			cast(LPWSTR) &keyEvent.utfCode,
@@ -496,20 +496,19 @@ private extern (Windows) LRESULT WndProc(HWND hWnd, UINT message, WPARAM wParam,
 		}
 		break;
 
-	case WM_NCLBUTTONDOWN:
-	case WM_ENTERSIZEMOVE: // useless as we intercept every click on the client area
+	case WM_NCLBUTTONDOWN: // HACK: there is a delay between the main event loop lock and WM_ENTERSIZEMOVE
+	case WM_ENTERSIZEMOVE:
 		//SetTimer(hWnd, 100, 15, &TimerProc);
 		scope (failure) return 0;
 		engine.suspend();
-		break; // do not process this event
+		break; // do not process WM_NCLBUTTONDOWN or the window becomes unmoveable
 
-	case WM_NCLBUTTONUP: // does not seem to be intercepted by Windows
-	case WM_NCMOUSEMOVE: // HACK: workaround for WM_NCLBUTTONUP
-	case WM_EXITSIZEMOVE: // useless
+	//case WM_NCLBUTTONUP:
+	case WM_EXITSIZEMOVE:
 		//KillTimer(hWnd, 100);
 		scope (failure) return 0;
 		engine.resume();
-		break; // do not process this event
+		break;
 
 	default:
 	}
@@ -518,9 +517,11 @@ private extern (Windows) LRESULT WndProc(HWND hWnd, UINT message, WPARAM wParam,
 }
 
 /*
-TIMERPROC TimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
+private extern (Windows) nothrow void TimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 {
 	scope (failure) KillTimer(hWnd, idEvent);
+	auto window = cast(OpenGLWindow) cast(void*) GetWindowLongA(hWnd, GWL_USERDATA);
+	auto engine = window ? window.engine : null;
 	engine.frame();
 }
 */

@@ -13,19 +13,19 @@ if (size >= 2 && size <= 4 && isFloatingPoint!T)
 		static if (size >= 2 || size <= 4) {
 			struct {
 				static if (size > 0) {
-					T x;
+					T x = 0;
 					alias r = x;
 				}
 				static if (size > 1) {
-					T y;
+					T y = 0;
 					alias g = y;
 				}
 				static if (size > 2) {
-					T z;
+					T z = 0;
 					alias b = z;
 				}
 				static if (size > 3) {
-					T w;
+					T w = 0;
 					alias a = w;
 				}
 			}

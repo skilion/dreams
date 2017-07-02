@@ -7,17 +7,17 @@ import log, matrix, renderer, vector;
 struct Emitter
 {
 	Vec3f position;
-	float minSize;
-	float maxSize;
-	float rate;
+	float minSize = 0;
+	float maxSize = 0;
+	float rate = 0;
 	
 	// particles properties
-	float minDuration, maxDuration;
+	float minDuration = 0, maxDuration = 0;
 	Vec3f velocity;
-	float vibrationX; // randomize the initial velocity around the X axis [0 .. 1]
-	float vibrationY; // randomize the initial velocity around the Y axis [0 .. 1]
-	float vibrationZ; // randomize the initial velocity around the Z axis [0 .. 1]
-	float weight; // influence of the gravity of the particle system
+	float vibrationX = 0; // randomize the initial velocity around the X axis [0 .. 1]
+	float vibrationY = 0; // randomize the initial velocity around the Y axis [0 .. 1]
+	float vibrationZ = 0; // randomize the initial velocity around the Z axis [0 .. 1]
+	float weight = 0; // influence of the gravity of the particle system
 	Vec4f color;
 
 	// increased over time, when it exceed 1 a new particle is created

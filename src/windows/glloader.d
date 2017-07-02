@@ -1,16 +1,14 @@
 module windows.glloader;
 
-import windows.wgl, windows.windows;
+import core.sys.windows.wingdi;
+import windows.windows;
 import cstr, log;
 
 private __gshared HMODULE libGL;
 
 void* glGetProcAddress(const(char)* procName)
 {
-	void* procAddress = null;
-	if (wglGetProcAddress) {
-		procAddress = wglGetProcAddress(procName);
-	}
+	void* procAddress = wglGetProcAddress(procName);
 	if (libGL && procAddress == null) {
 		procAddress = GetProcAddress(libGL, procName);
 	}

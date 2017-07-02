@@ -93,7 +93,7 @@ public:
 		Index i5 = addVertex(x1, y1, z0);
 		Index i6 = addVertex(x1, y1, z1);
 		Index i7 = addVertex(x0, y1, z1);
-		Index blockIndices[36] = [
+		Index[36] blockIndices = [
 			i0, i3, i7, i7, i4, i0, i1, i5, i6, i6, i2, i1,
 			i0, i1, i2, i2, i3, i0, i4, i7, i6, i6, i5, i4,
 			i0, i4, i5, i5, i1, i0, i3, i2, i6, i6, i7, i3
@@ -113,7 +113,7 @@ public:
 		Index i5 = addVertex(x1, y0, z1);
 		Index i6 = addVertex(x0, y1, z1);
 		Index i7 = addVertex(x1, y1, z1);
-		Index blockIndices[36] = [
+		Index[36] blockIndices = [
 			i0, i0, i4, i4, i4, i6, i6, i6, i2, i2, i2, i0,
 			i1, i1, i3, i3, i3, i7, i7, i7, i5, i5, i5, i1,
 			i0, i0, i1, i4, i4, i5, i6, i6, i7, i2, i2, i3

@@ -110,9 +110,9 @@ public:
 		destroy(ctx);
 	}
 
-	override void init()
+	override void init(char[][] args)
 	{
-		super.init();
+		super.init(args);
 		ctx.init();
 		imm.init();
 		worldRenderer.init();
@@ -138,17 +138,15 @@ public:
 		editor = new Editor(world.root);
 		setState(State.playing);
 
-		// ********************************************************************
-		// UNCOMMENT THE FOLLOWING LINES TO ENABLE THE EDITOR
-		// ********************************************************************
-		/*
-		setState(State.edit);
-		player.setFlag(Player.Flag.noclip);
-		player.position = Vec3f(135.5f, 516, 0.5f);
-		freeCamera.yaw = camera.targetYaw = 180 * PI / 180;
-		//player.position = Vec3f(769.5f, 256, 1006);
-		//freeCamera.yaw = 0 * PI / 180;
-		*/
+		// enable the editor
+		if (args.length >= 2 && args[1] == "-editor") {
+			setState(State.edit);
+			player.setFlag(Player.Flag.noclip);
+			player.position = Vec3f(135.5f, 516, 0.5f);
+			freeCamera.yaw = camera.targetYaw = 180 * PI / 180;
+			//player.position = Vec3f(769.5f, 256, 1006);
+			//freeCamera.yaw = 0 * PI / 180;
+		}
 
 		// start with a black screen
 		if (state == State.playing) ef.push(new Blank(ctx, black, 1000));
@@ -184,7 +182,7 @@ public:
 		renderer.getDisplayMode(width, height, fullscreen);
 		View view;
 		view.fov = 80 * PI / 180;
-		view.aspect = width / cast(float) height;
+		view.aspect = height > 0 ? width / cast(float) height : 1;
 		view.near = 0.1;
 		view.far = 200;
 		final switch (state) {
@@ -393,7 +391,8 @@ public:
 		case KeySymbol.k_f2: // reset renderer
 			if (keyEvent.type == KeyEvent.Type.press) {
 				world.root.shrink();
-				core.memory.GC.collect();
+				import core.memory;
+				GC.collect();
 				worldRenderer.destroyAllMeshes();
 			}
 			break;
@@ -639,7 +638,7 @@ public:
 				ef.push(new StarField(ctx, white, black, 50, 18, 15));
 				ef.push(new Fade(ctx, white, black, 1));
 				ef.push(new Blank(ctx, black, 1));
-				ef.push(new Credits(ctx, defaultFont, 3, "We're Made of Dreams"));
+				ef.push(new Credits(ctx, defaultFont, 3, "We are Made of Dreams"));
 				ef.push(new Credits(ctx, defaultFont, 3, "Programming and Art by Andrea Radaelli"));
 				ef.push(new Credits(ctx, defaultFont, 3, "Music by Matteo Medici"));
 				ef.push(new Blank(ctx, black, 1000));

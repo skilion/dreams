@@ -1,6 +1,6 @@
 module main;
 
-version (Windows)
+version (none)
 {
 	import core.runtime;
 	import core.sys.windows.windows;
@@ -12,7 +12,7 @@ version (Windows)
 	//pragma (lib, "Winmm.lib");
 
 	extern (Windows):
-	LPTSTR GetCommandLineA();
+	char* GetCommandLineA();
 	//UINT timeBeginPeriod(UINT);
 	//UINT timeEndPeriod(UINT);
 	int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -28,7 +28,7 @@ version (Windows)
 		catch (Throwable t)
 		{
 			string str = t.toString();
-			auto msg = message(t.file, t.line, Logger.Message.Level.error, str);
+			auto msg = message(t.file, cast(int) t.line, Logger.Message.Level.error, str);
 			gLogger.log(msg);
 			gLogger.flush();
 			MessageBoxA(null, str.toStringz(), "Error", MB_ICONEXCLAMATION);

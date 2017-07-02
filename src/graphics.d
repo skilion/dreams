@@ -227,56 +227,58 @@ public:
 		if (!indexCount) return;
 		int width, height;
 		getSize(width, height);
-		/*
-		immutable int virtualWidth = 1280;
-		immutable int virtualHeight = 768;
-		immutable float ratio = virtualWidth / cast(float) virtualHeight;
-		float xRatio = virtualWidth / cast(float) width;
-		float yRatio = virtualHeight / cast(float) height;
-		float finalWidth, finalHeight;
-		if (xRatio > yRatio)
-		{
-			finalWidth = virtualWidth;
-			finalHeight = virtualHeight * height / (width / ratio);
-		}
-		else
-		{
-			finalWidth = virtualWidth * width / (height * ratio);
-			finalHeight = virtualHeight;
-		}
-		auto mvp = orthoMatrix(0, finalWidth, 0, finalHeight, -1, 1);
-		*/
-		auto mvp = orthoMatrix(0, width, height, 0, -1, 1);
+		if (width > 0 && height > 0) {
+			/*
+			immutable int virtualWidth = 1280;
+			immutable int virtualHeight = 768;
+			immutable float ratio = virtualWidth / cast(float) virtualHeight;
+			float xRatio = virtualWidth / cast(float) width;
+			float yRatio = virtualHeight / cast(float) height;
+			float finalWidth, finalHeight;
+			if (xRatio > yRatio)
+			{
+				finalWidth = virtualWidth;
+				finalHeight = virtualHeight * height / (width / ratio);
+			}
+			else
+			{
+				finalWidth = virtualWidth * width / (height * ratio);
+				finalHeight = virtualHeight;
+			}
+			auto mvp = orthoMatrix(0, finalWidth, 0, finalHeight, -1, 1);
+			*/
+			auto mvp = orthoMatrix(0, width, height, 0, -1, 1);
 
-		renderer.updateIndexBuffer(indexBuffer, indices[0 .. indexCount], BufferUsage.streamDraw);
-		renderer.updateVertexBuffer(vertexBuffer, vertices[0 .. vertexCount], BufferUsage.streamDraw);
-		final switch (drawingMode)
-		{
-		case DrawingMode.fill:
-			renderer.setShader(textureShader.shader);
-			textureShader.mvp.setMat4f(mvp);
-			textureShader.textureMask.setFloat(0);
-			textureShader.fixedColor.setVec4f(white);
-			textureShader.texture.setInteger(0);
-			break;
-		case DrawingMode.texture:
-			renderer.setTexture(texture);
-			renderer.setShader(textureShader.shader);
-			textureShader.mvp.setMat4f(mvp);
-			textureShader.textureMask.setFloat(1);
-			textureShader.fixedColor.setVec4f(white);
-			textureShader.texture.setInteger(0);
-			break;
-		case DrawingMode.alphaTexture:
-			renderer.setTexture(texture);
-			renderer.setShader(alphaTexShader.shader);
-			alphaTexShader.mvp.setMat4f(mvp);
-			alphaTexShader.fixedColor.setVec4f(white);
-			alphaTexShader.texture.setInteger(0);
-			break;
+			renderer.updateIndexBuffer(indexBuffer, indices[0 .. indexCount], BufferUsage.streamDraw);
+			renderer.updateVertexBuffer(vertexBuffer, vertices[0 .. vertexCount], BufferUsage.streamDraw);
+			final switch (drawingMode)
+			{
+			case DrawingMode.fill:
+				renderer.setShader(textureShader.shader);
+				textureShader.mvp.setMat4f(mvp);
+				textureShader.textureMask.setFloat(0);
+				textureShader.fixedColor.setVec4f(white);
+				textureShader.texture.setInteger(0);
+				break;
+			case DrawingMode.texture:
+				renderer.setTexture(texture);
+				renderer.setShader(textureShader.shader);
+				textureShader.mvp.setMat4f(mvp);
+				textureShader.textureMask.setFloat(1);
+				textureShader.fixedColor.setVec4f(white);
+				textureShader.texture.setInteger(0);
+				break;
+			case DrawingMode.alphaTexture:
+				renderer.setTexture(texture);
+				renderer.setShader(alphaTexShader.shader);
+				alphaTexShader.mvp.setMat4f(mvp);
+				alphaTexShader.fixedColor.setVec4f(white);
+				alphaTexShader.texture.setInteger(0);
+				break;
+			}
+			renderer.setState(0);
+			renderer.draw(indexBuffer, indexCount, vertexBuffer);
 		}
-		renderer.setState(0);
-		renderer.draw(indexBuffer, indexCount, vertexBuffer);
 		indexCount = vertexCount = 0;
 	}
 

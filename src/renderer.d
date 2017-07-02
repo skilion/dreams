@@ -100,7 +100,7 @@ private struct FxaaShader
 	}
 }
 
-private immutable float quadVertices[8] = [-1, -1, 1, -1, -1, 1, 1, 1];
+private immutable float[8] quadVertices = [-1, -1, 1, -1, -1, 1, 1, 1];
 
 final class Renderer
 {
@@ -214,6 +214,7 @@ public:
 
 	void fxaa() // HACK: direct rederer call
 	{
+		if (window.width == 0 || window.height == 0) return;
 		checkOpenGLError();
 		glDisable(GL_DEPTH_TEST);
 		glDepthMask(GL_FALSE); // disable depth buffer writing

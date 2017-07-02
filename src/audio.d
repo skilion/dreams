@@ -82,14 +82,24 @@ final class Audio
 
 	void suspend()
 	{
+		foreach (source; sources) {
+			if (source.isActive()) {
+				source.pause();
+			}
+		}
 		alcSuspendContext(context);
 		alcMakeContextCurrent(null);
 	}
 
 	void resume()
 	{
-		alcMakeContextCurrent(context);
 		alcProcessContext(context);
+		alcMakeContextCurrent(context);
+		foreach (source; sources) {
+			if (source.isActive()) {
+				source.play();
+			}
+		}
 	}
 
 	/*

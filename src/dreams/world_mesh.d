@@ -43,6 +43,7 @@ struct WorldMesh
 			return root.getBlock(x, y, z);
 		}
 
+		// loop through all the blocks of the chunk and extract a 3x3x3 matrix for each block (see doc/mesher.png)
 		WorldBlock[27] near;
 		for (uint x = x0; x < x1; x++) {
 			float f_x = x - x0;
@@ -78,6 +79,7 @@ struct WorldMesh
 					near[26] = getBlock(x + 1, y + 1, z + 1);
 					if (near[13].isOpaque()) {
 						float f_z = z - z0;
+						// add the block geometry to the mesh
 						addBlock(f_x, f_y, f_z, near);
 					}
 					near[00] = near[01];
@@ -113,8 +115,8 @@ struct WorldMesh
 		ushort t = cast(ushort) ((texture >> 4) * tileSize); // texture / 16 * tileSize);
 		int base = 0; // base index in blockVertices[]
 		Vertex vertex;
-		int ao[4]; // ambient occlusion for each vertex
-		ushort faceVertices[4]; // index of each vertex in the mesh
+		int[4] ao; // ambient occlusion for each vertex
+		ushort[4] faceVertices; // index of each vertex in the mesh
 		foreach (face; 0 .. 6) {
 			if (visibleFaces & 1) {
 				foreach (i; 0 .. 4) { // foreach vertex
@@ -201,7 +203,7 @@ private int vertexAmbientOcclusion(int vertex, const ref WorldBlock[27] near)
 	return 3 - (side0.isOpaque() + side1.isOpaque() + corner.isOpaque());
 }
 
-// mesh of a single block
+// mesh of a single block (see doc/faces.png and doc/vertices.png)
 private enum tileSize = ushort.max / 16;
 private enum a = 16;
 private enum b = tileSize - 16;

@@ -499,13 +499,13 @@ struct FT_LibraryRec_
 	FT_Int version_minor;
 	FT_Int version_patch;
 	FT_UInt num_modules;
-	FT_Module modules[FT_MAX_MODULES];
+	FT_Module[FT_MAX_MODULES] modules;
 	FT_ListRec renderers;
 	FT_Renderer cur_renderer;
 	FT_Module auto_hinter;
 	FT_Byte* raster_pool;
 	FT_ULong raster_pool_size;
-	FT_DebugHook_Func debug_hooks[4];
+	FT_DebugHook_Func[4] debug_hooks;
 };
 alias FT_LibraryRec_ FT_LibraryRec;
 alias FT_LibraryRec_* FT_Library;
