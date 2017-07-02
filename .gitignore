@@ -1,1 +1,3 @@
-*.suo
+.vs/
+*.vcxproj.filters
+*.vcxproj.user
