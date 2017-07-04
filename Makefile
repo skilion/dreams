@@ -1,9 +1,7 @@
-DC = dmd
-DFLAGS = -od./bin -of./bin/$@ -I./import -L-L./lib -L-laudio -L-ldl \
-	-L-lDX11-dmd -L-lfreetype -L-limage -L-ljpeg -L-lvorbis -L-lvorbisfile \
-	-L-logg -L-lopenal -L-lpng -L-lX11  -L-lz
-#DFLAGS += -debug -g
-DFLAGS += -boundscheck=off -inline -O -release
+DFLAGS = -odbin -ofbin/dreams
+DFLAGS += -Iimport -Iext/libDX11/import
+DFLAGS += -L-Llib -L-Lext/libDX11/lib
+DFLAGS += -L-laudio -L-ldl -L-lDX11-dmd -L-lfreetype -L-limage -L-ljpeg -L-lvorbis -L-lvorbisfile -L-logg -L-lopenal -L-lpng -L-lX11
 
 SOURCES = \
 	src/dreams/camera.d \
@@ -44,9 +42,22 @@ SOURCES = \
 	src/vector.d \
 	src/zfile.d
 
-dreams: $(SOURCES)
-	$(DC) $(DFLAGS) $(SOURCES)
+bin/dreams: $(SOURCES) ext/libDX11/lib/libDX11-dmd.a lib/libaudio.a lib/libimage.a
+	dmd -O -release -inline $(DFLAGS) $(SOURCES)
 
+debug: DFLAGS += -g -gx
+debug: bin/dreams
+
+ext/libDX11/lib/libDX11-dmd.a:
+	cd ext/libDX11 && $(MAKE) DC=dmd
+
+lib/libaudio.a:
+	cd libaudio && $(MAKE)
+
+lib/libimage.a:
+	cd libimage&& $(MAKE)
 clean:
-	cd bin; \
-	rm -f app *.o
+	cd ext/libDX11 && $(MAKE) clean
+	cd libaudio && $(MAKE) clean
+	cd libimage&& $(MAKE) clean
+	rm -f bin/dreams.o bin/dreams

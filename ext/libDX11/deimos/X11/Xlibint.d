@@ -7,7 +7,8 @@ module deimos.X11.Xlibint;
  *  Warning, there be dragons here....
  */
 import std.stdio;
-import std.c.string : memcpy;
+import core.stdc.string : memcpy;
+import core.stdc.stdio : fopen;
 import core.stdc.config;
 import core.stdc.stdlib : free, malloc, calloc, realloc;
 
@@ -83,7 +84,7 @@ struct _XDisplay{
     char*               bufmax;                         /* Output buffer maximum+1 address.                             */
     uint                max_request_size;               /* maximum number 32 bit words in request                       */
     _XrmHashBucketRec*  db;
-    extern (C) nothrow int                 function( _XDisplay* ) synchandler;/* Synchronization handler                                      */
+    extern (C) nothrow int function( _XDisplay* ) synchandler;/* Synchronization handler                                      */
     char*               display_name;                   /* "host:display" string used on this connect                   */
     int                 default_screen;                 /* default screen for operations                                */
     int                 nscreens;                       /* number of screens on this server                             */
@@ -112,12 +113,12 @@ struct _XDisplay{
                             Display*                    /* dpy                                                          */,
                             XEvent*                     /* re                                                           */,
                             xEvent*                     /* event                                                        */
-    ) event_vec[128];
+    )[128] event_vec;
     extern (C) nothrow Status function(                 /* vector for event to wire                                     */
                             Display*                    /* dpy                                                          */,
                             XEvent*                     /* re                                                           */,
                             xEvent*                     /* event                                                        */
-    ) wire_vec[128];
+    )[128] wire_vec;
     KeySym                  lock_meaning;               /* for XLookupString                                            */
     _XLockInfo*             lock;                       /* multi-thread state, display lock                             */
     _XInternalAsync*        async_handlers;             /* for internal async                                           */
@@ -174,13 +175,13 @@ struct _XDisplay{
                             Display*                    /* dpy                                                          */,
                             XGenericEventCookie*        /* Xlib event                                                   */,
                             xEvent*                     /* wire event                                                   */
-    ) generic_event_vec[128];
+    )[128] generic_event_vec;
                                                         /* vector for event copy, index is (extension - 128)            */
     extern (C) nothrow Bool function(
                             Display*                    /* dpy                                                          */,
                             XGenericEventCookie*        /* in                                                           */,
                             XGenericEventCookie*        /* out                                                          */
-    ) generic_event_copy_vec[128];
+    )[128] generic_event_copy_vec;
     void*                   cookiejar;                  /* cookie events returned but not claimed                       */
 };
 alias _XDisplay Display;
@@ -188,9 +189,9 @@ alias _XDisplay Display;
 void XAllocIDs( Display* dpy, XID* ids, int n){ dpy.idlist_alloc(dpy,ids,n); }
 
 /*
- * define the following if you want the Data macro to be a procedure instead
+ * In the C header files, the following is enabled only on CRAY computers.
  */
-enum bool DataRoutineIsProcedure = true;
+enum bool DataRoutineIsProcedure = false;
 
 /*
  * _QEvent datatype for use in input queueing.
@@ -351,33 +352,33 @@ else{
     void* Xcalloc( int nelem, size_t elsize){ return calloc(nelem, elsize); }
 }
 
-const int       LOCKED          = 1;
-const int       UNLOCKED        = 0;
+enum       LOCKED          = 1;
+enum       UNLOCKED        = 0;
 
-const int       BUFSIZE         = 2048;                 /* X output buffer size.                                        */
-const int       PTSPERBATCH     = 1024;                 /* point batching                                               */
-const int       WLNSPERBATCH    = 50;                   /* wide line batching                                           */
-const int       ZLNSPERBATCH    = 1024;                 /* thin line batching                                           */
-const int       WRCTSPERBATCH   = 10;                   /* wide line rectangle batching                                 */
-const int       ZRCTSPERBATCH   = 256;                  /* thin line rectangle batching                                 */
-const int       FRCTSPERBATCH   = 256;                  /* filled rectangle batching                                    */
-const int       FARCSPERBATCH   = 256;                  /* filled arc batching                                          */
-const string    CURSORFONT      = "cursor";             /* standard cursor fonts                                        */
+enum       BUFSIZE         = 2048;                 /* X output buffer size.                                        */
+enum       PTSPERBATCH     = 1024;                 /* point batching                                               */
+enum       WLNSPERBATCH    = 50;                   /* wide line batching                                           */
+enum       ZLNSPERBATCH    = 1024;                 /* thin line batching                                           */
+enum       WRCTSPERBATCH   = 10;                   /* wide line rectangle batching                                 */
+enum       ZRCTSPERBATCH   = 256;                  /* thin line rectangle batching                                 */
+enum       FRCTSPERBATCH   = 256;                  /* filled rectangle batching                                    */
+enum       FARCSPERBATCH   = 256;                  /* filled arc batching                                          */
+immutable char* CURSORFONT = "cursor";             /* standard cursor fonts                                        */
 
 
 /*
  * Display flags
  */
-enum {
-    XlibDisplayIOError      = 1L << 0,
-    XlibDisplayClosing      = 1L << 1,
-    XlibDisplayNoXkb        = 1L << 2,
-    XlibDisplayPrivSync     = 1L << 3,
-    XlibDisplayProcConni    = 1L << 4,                  /* in _XProcessInternalConnection                               */
-    XlibDisplayReadEvents   = 1L << 5,                  /* in _XReadEvents                                              */
-    XlibDisplayReply        = 1L << 5,                  /* in _XReply                                                   */
-    XlibDisplayWriting      = 1L << 6,                  /* in _XFlushInt, _XSend                                        */
-    XlibDisplayDfltRMDB     = 1L << 7                   /* mark if RM db from XGetDefault                               */
+enum : c_ulong {
+    XlibDisplayIOError      = 1 << 0,
+    XlibDisplayClosing      = 1 << 1,
+    XlibDisplayNoXkb        = 1 << 2,
+    XlibDisplayPrivSync     = 1 << 3,
+    XlibDisplayProcConni    = 1 << 4,                  /* in _XProcessInternalConnection                               */
+    XlibDisplayReadEvents   = 1 << 5,                  /* in _XReadEvents                                              */
+    XlibDisplayReply        = 1 << 5,                  /* in _XReply                                                   */
+    XlibDisplayWriting      = 1 << 6,                  /* in _XFlushInt, _XSend                                        */
+    XlibDisplayDfltRMDB     = 1 << 7                   /* mark if RM db from XGetDefault                               */
 }
 
 /*
@@ -587,7 +588,7 @@ void FlushGC(Display* dpy, GC gc){
  * "data" is a pinter to a data buffer.
  * "len" is the length of the data buffer.
  */
-static if( DataRoutineIsProcedure ){
+static if( !DataRoutineIsProcedure ){
     void Data( Display* dpy, char* data, uint len) {
         if (dpy.bufptr + len <= dpy.bufmax){
             memcpy(dpy.bufptr, data, cast(int)len);
@@ -893,7 +894,10 @@ alias _XExten _XExtension;
 
                                                         /* extension hooks                                              */
 
-extern void Data(Display* dpy, char* data, c_long len);
+static if (DataRoutineIsProcedure)
+{
+    extern void Data(Display* dpy, char* data, c_long len);
+}
 
 extern int _XError(
     Display*                                            /* dpy                                                          */,
@@ -1266,8 +1270,8 @@ extern int _XTextHeight16(
     int                                                 /* count                                                        */
 );
 
-alias std.stdio.File.open   _XOpenFile;
-alias std.stdio.fopen       _XFopenFile;
+alias std.stdio.File.open    _XOpenFile;
+alias core.stdc.stdio.fopen  _XFopenFile;
 
                                                         /* EvToWire.c                                                   */
 extern Status _XEventToWire(Display* dpy, XEvent* re, xEvent* event);

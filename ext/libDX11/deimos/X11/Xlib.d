@@ -1,12 +1,13 @@
 module deimos.X11.Xlib;
 import core.stdc.config;
-import std.c.stdarg;
+import core.stdc.stddef : wchar_t;
+//import core.stdc.stdarg;
 import deimos.X11.X;
 
 extern (C) nothrow:
 
-const int XlibSpecificationRelease  = 6;
-const int X_HAVE_UTF8_STRING        = 1;
+enum XlibSpecificationRelease  = 6;
+enum X_HAVE_UTF8_STRING        = 1;
 
 alias char* XPointer;
 alias int Status;
@@ -373,7 +374,7 @@ struct XKeyboardState{
     uint bell_pitch, bell_duration;
     c_ulong led_mask;
     int global_auto_repeat;
-    char auto_repeats[32];
+    char[32] auto_repeats;
 }
 
 /* Data structure for XGetMotionEvents.  */
@@ -552,7 +553,7 @@ struct XKeymapEvent{
     Bool send_event;                                    /* true if this came from a SendEvent request                   */
     Display* display;                                   /* Display the event was read from                              */
     Window window;
-    char key_vector[32];
+    char[32] key_vector;
 }
 
 struct XExposeEvent{
@@ -795,9 +796,9 @@ struct XClientMessageEvent{
     Atom message_type;
     int format;
     union _data  {
-                    char b[20];
-                    short s[10];
-                    c_long l[5];
+                    char[20] b;
+                    short[10] s;
+                    c_long[5] l;
                 }
 	_data data;
 }
@@ -896,7 +897,7 @@ struct XGenericEventCookie{
     XKeymapEvent xkeymap;
     XGenericEvent xgeneric;
     XGenericEventCookie xcookie;
-    c_long pad[24];
+    c_long[24] pad;
 };
 
 int XAllocID(Display* dpy) {return cast(int) dpy.resource_alloc(dpy);}
@@ -996,22 +997,22 @@ struct XmbTextItem{
 }
 
 struct XwcTextItem{
-    wchar*          chars;
+    wchar_t*        chars;
     int             nchars;
     int             delta;
     XFontSet        font_set;
 }
 
-const char[] XNRequiredCharSet                = ".duprequiredCharSet".dup;
-const char[] XNQueryOrientation               = ".dupqueryOrientation".dup;
-const char[] XNBaseFontName                   = ".dupbaseFontName".dup;
-const char[] XNOMAutomatic                    = ".dupomAutomatic".dup;
-const char[] XNMissingCharSet                 = ".dupmissingCharSet".dup;
-const char[] XNDefaultString                  = ".dupdefaultString".dup;
-const char[] XNOrientation                    = ".duporientation".dup;
-const char[] XNDirectionalDependentDrawing    = ".dupdirectionalDependentDrawing".dup;
-const char[] XNContextualDrawing              = ".dupcontextualDrawing".dup;
-const char[] XNFontInfo                       = ".dupfontInfo".dup;
+immutable char* XNRequiredCharSet             = "requiredCharSet";
+immutable char* XNQueryOrientation            = "queryOrientation";
+immutable char* XNBaseFontName                = "baseFontName";
+immutable char* XNOMAutomatic                 = "omAutomatic";
+immutable char* XNMissingCharSet              = "missingCharSet";
+immutable char* XNDefaultString               = "defaultString";
+immutable char* XNOrientation                 = "orientation";
+immutable char* XNDirectionalDependentDrawing = "directionalDependentDrawing";
+immutable char* XNContextualDrawing           = "contextualDrawing";
+immutable char* XNFontInfo                    = "fontInfo";
 
 struct XOMCharSetList{
     int charset_count;
@@ -1067,69 +1068,69 @@ struct XIMStyles{
 }
 
 alias c_ulong XIMStyle;
-enum {
-    XIMPreeditArea      = 0x0001L,
-    XIMPreeditCallbacks = 0x0002L,
-    XIMPreeditPosition  = 0x0004L,
-    XIMPreeditNothing   = 0x0008L,
-    XIMPreeditNone      = 0x0010L,
-    XIMStatusArea       = 0x0100L,
-    XIMStatusCallbacks  = 0x0200L,
-    XIMStatusNothing    = 0x0400L,
-    XIMStatusNone       = 0x0800L
+enum : c_ulong {
+    XIMPreeditArea      = 0x0001,
+    XIMPreeditCallbacks = 0x0002,
+    XIMPreeditPosition  = 0x0004,
+    XIMPreeditNothing   = 0x0008,
+    XIMPreeditNone      = 0x0010,
+    XIMStatusArea       = 0x0100,
+    XIMStatusCallbacks  = 0x0200,
+    XIMStatusNothing    = 0x0400,
+    XIMStatusNone       = 0x0800
 }
 
-const char[] XNVaNestedList                 = "XNVaNestedList".dup;
-const char[] XNQueryInputStyle              = "queryInputStyle".dup;
-const char[] XNClientWindow                 = "clientWindow".dup;
-const char[] XNInputStyle                   = "inputStyle".dup;
-const char[] XNFocusWindow                  = "focusWindow".dup;
-const char[] XNResourceName                 = "resourceName".dup;
-const char[] XNResourceClass                = "resourceClass".dup;
-const char[] XNGeometryCallback             = "geometryCallback".dup;
-const char[] XNDestroyCallback              = "destroyCallback".dup;
-const char[] XNFilterEvents                 = "filterEvents".dup;
-const char[] XNPreeditStartCallback         = "preeditStartCallback".dup;
-const char[] XNPreeditDoneCallback          = "preeditDoneCallback".dup;
-const char[] XNPreeditDrawCallback          = "preeditDrawCallback".dup;
-const char[] XNPreeditCaretCallback         = "preeditCaretCallback".dup;
-const char[] XNPreeditStateNotifyCallback   = "preeditStateNotifyCallback".dup;
-const char[] XNPreeditAttributes            = "preeditAttributes".dup;
-const char[] XNStatusStartCallback          = "statusStartCallback".dup;
-const char[] XNStatusDoneCallback           = "statusDoneCallback".dup;
-const char[] XNStatusDrawCallback           = "statusDrawCallback".dup;
-const char[] XNStatusAttributes             = "statusAttributes".dup;
-const char[] XNArea                         = "area".dup;
-const char[] XNAreaNeeded                   = "areaNeeded".dup;
-const char[] XNSpotLocation                 = "spotLocation".dup;
-const char[] XNColormap                     = "colorMap".dup;
-const char[] XNStdColormap                  = "stdColorMap".dup;
-const char[] XNForeground                   = "foreground".dup;
-const char[] XNBackground                   = "background".dup;
-const char[] XNBackgroundPixmap             = "backgroundPixmap".dup;
-const char[] XNFontSet                      = "fontSet".dup;
-const char[] XNLineSpace                    = "lineSpace".dup;
-const char[] XNCursor                       = "cursor".dup;
+immutable char* XNVaNestedList                 = "XNVaNestedList";
+immutable char* XNQueryInputStyle              = "queryInputStyle";
+immutable char* XNClientWindow                 = "clientWindow";
+immutable char* XNInputStyle                   = "inputStyle";
+immutable char* XNFocusWindow                  = "focusWindow";
+immutable char* XNResourceName                 = "resourceName";
+immutable char* XNResourceClass                = "resourceClass";
+immutable char* XNGeometryCallback             = "geometryCallback";
+immutable char* XNDestroyCallback              = "destroyCallback";
+immutable char* XNFilterEvents                 = "filterEvents";
+immutable char* XNPreeditStartCallback         = "preeditStartCallback";
+immutable char* XNPreeditDoneCallback          = "preeditDoneCallback";
+immutable char* XNPreeditDrawCallback          = "preeditDrawCallback";
+immutable char* XNPreeditCaretCallback         = "preeditCaretCallback";
+immutable char* XNPreeditStateNotifyCallback   = "preeditStateNotifyCallback";
+immutable char* XNPreeditAttributes            = "preeditAttributes";
+immutable char* XNStatusStartCallback          = "statusStartCallback";
+immutable char* XNStatusDoneCallback           = "statusDoneCallback";
+immutable char* XNStatusDrawCallback           = "statusDrawCallback";
+immutable char* XNStatusAttributes             = "statusAttributes";
+immutable char* XNArea                         = "area";
+immutable char* XNAreaNeeded                   = "areaNeeded";
+immutable char* XNSpotLocation                 = "spotLocation";
+immutable char* XNColormap                     = "colorMap";
+immutable char* XNStdColormap                  = "stdColorMap";
+immutable char* XNForeground                   = "foreground";
+immutable char* XNBackground                   = "background";
+immutable char* XNBackgroundPixmap             = "backgroundPixmap";
+immutable char* XNFontSet                      = "fontSet";
+immutable char* XNLineSpace                    = "lineSpace";
+immutable char* XNCursor                       = "cursor";
 
-const char[] XNQueryIMValuesList            = "queryIMValuesList".dup;
-const char[] XNQueryICValuesList            = "queryICValuesList".dup;
-const char[] XNVisiblePosition              = "visiblePosition".dup;
-const char[] XNR6PreeditCallback            = "r6PreeditCallback".dup;
-const char[] XNStringConversionCallback     = "stringConversionCallback".dup;
-const char[] XNStringConversion             = "stringConversion".dup;
-const char[] XNResetState                   = "resetState".dup;
-const char[] XNHotKey                       = "hotKey".dup;
-const char[] XNHotKeyState                  = "hotKeyState".dup;
-const char[] XNPreeditState                 = "preeditState".dup;
-const char[] XNSeparatorofNestedList        = "separatorofNestedList".dup;
+immutable char* XNQueryIMValuesList            = "queryIMValuesList";
+immutable char* XNQueryICValuesList            = "queryICValuesList";
+immutable char* XNVisiblePosition              = "visiblePosition";
+immutable char* XNR6PreeditCallback            = "r6PreeditCallback";
+immutable char* XNStringConversionCallback     = "stringConversionCallback";
+immutable char* XNStringConversion             = "stringConversion";
+immutable char* XNResetState                   = "resetState";
+immutable char* XNHotKey                       = "hotKey";
+immutable char* XNHotKeyState                  = "hotKeyState";
+immutable char* XNPreeditState                 = "preeditState";
+immutable char* XNSeparatorofNestedList        = "separatorofNestedList";
 
-const int XBufferOverflow                   = -1;
-const int XLookupNone                       = 1;
-const int XLookupChars                      = 2;
-const int XLookupKeySym                     = 3;
-const int XLookupBoth                       = 4;
+enum XBufferOverflow                   = -1;
+enum XLookupNone                       = 1;
+enum XLookupChars                      = 2;
+enum XLookupKeySym                     = 3;
+enum XLookupBoth                       = 4;
 
-void* XVaNestedList;
+alias XVaNestedList = void*;
 
 struct XIMCallback{
     XPointer client_data;
@@ -1142,16 +1143,16 @@ struct XICCallback{
 }
 
 alias int XIMFeedback;
-enum {
-    XIMReverse              = 1L,
-    XIMUnderline            = (1L<<1),
-    XIMHighlight            = (1L<<2),
-    XIMPrimary              = (1L<<5),
-    XIMSecondary            = (1L<<6),
-    XIMTertiary             = (1L<<7),
-    XIMVisibleToForward     = (1L<<8),
-    XIMVisibleToBackword    = (1L<<9),
-    XIMVisibleToCenter      = (1L<<10)
+enum : c_ulong {
+    XIMReverse              = 1,
+    XIMUnderline            = (1<<1),
+    XIMHighlight            = (1<<2),
+    XIMPrimary              = (1<<5),
+    XIMSecondary            = (1<<6),
+    XIMTertiary             = (1<<7),
+    XIMVisibleToForward     = (1<<8),
+    XIMVisibleToBackword    = (1<<9),
+    XIMVisibleToCenter      = (1<<10)
 }
 
 struct XIMText {
@@ -1160,16 +1161,16 @@ struct XIMText {
     Bool encoding_is_wchar;
     union c_string{
         char* multi_char;
-        wchar*   wide_char;
+        wchar_t* wide_char;
     }
 }
 
 
 alias c_ulong XIMPreeditState;
-enum {
-    XIMPreeditUnKnown   = 0L,
-    XIMPreeditEnable    = 1L,
-    XIMPreeditDisable   = (1L<<1)
+enum : c_ulong {
+    XIMPreeditUnKnown   = 0,
+    XIMPreeditEnable    = 1,
+    XIMPreeditDisable   = (1<<1)
 }
 
 struct XIMPreeditStateNotifyCallbackStruct {
@@ -1177,9 +1178,9 @@ struct XIMPreeditStateNotifyCallbackStruct {
 }
 
 alias c_ulong XIMResetState;
-enum {
-    XIMInitialState = 1L,
-    XIMPreserveState= 1L<<1
+enum : c_ulong {
+    XIMInitialState = 1,
+    XIMPreserveState= 1<<1
 }
 
 alias c_ulong XIMStringConversionFeedback;
@@ -1198,7 +1199,7 @@ struct XIMStringConversionText{
     Bool encoding_is_wchar;
     union c_string{
         char* mbs;
-        wchar*   wcs;
+        wchar_t* wcs;
     };
 }
 
@@ -1283,9 +1284,9 @@ struct XIMHotKeyTriggers {
 }
 
 alias c_ulong XIMHotKeyState;
-enum {
-    XIMHotKeyStateON    = 0x0001L,
-    XIMHotKeyStateOFF   = 0x0002L
+enum : c_ulong {
+    XIMHotKeyStateON    = 0x0001,
+    XIMHotKeyStateOFF   = 0x0002
 }
 
 struct XIMValuesList{
@@ -1294,14 +1295,14 @@ struct XIMValuesList{
 }
 
 version( Windows ){
-    alias _Xdebug* _Xdebug_p;
+	extern int	*_Xdebug_p;
+} else {
+	extern int _Xdebug;
 }
-
-extern int _Xdebug;
 
 extern XFontStruct* XLoadQueryFont(
     Display*                                            /* display                                                      */,
-    char*                                               /* name                                                         */
+    const(char)*                                        /* name                                                         */
 );
 
 extern XFontStruct* XQueryFont(
@@ -1381,7 +1382,7 @@ extern XImage* XGetSubImage(
  * X function declarations.
  */
 extern Display* XOpenDisplay(
-    char*                                               /* display_name                                                 */
+    const(char)*                                        /* display_name                                                 */
 );
 
 extern void XrmInitialize( );
@@ -1407,11 +1408,11 @@ extern Status XGetAtomNames(
 );
 extern char* XGetDefault(
     Display*                                            /* display                                                      */,
-    char*                                               /* program                                                      */,
-    char*                                               /* option                                                       */
+    const(char)*                                        /* program                                                      */,
+    const(char)*                                        /* option                                                       */
 );
 extern char* XDisplayName(
-    char*                                               /* string                                                       */
+    const(char)*                                        /* string                                                       */
 );
 extern char* XKeysymToString(
     KeySym                                              /* keysym                                                       */
@@ -1433,7 +1434,7 @@ extern int function(
 );
 extern Atom XInternAtom(
     Display*                                            /* display                                                      */,
-    char*                                               /* atom_name                                                    */,
+    const(char)*                                        /* atom_name                                                    */,
     Bool                                                /* only_if_exists                                               */
 );
 extern Status XInternAtoms(
@@ -1468,8 +1469,8 @@ extern Cursor XCreateGlyphCursor(
     Font                                                /* mask_font                                                    */,
     uint                                                /* source_char*                                                 */,
     uint                                                /* mask_char*                                                   */,
-    XColor*                                             /* foreground_color                                             */,
-    XColor*                                             /* background_color                                             */
+    const(XColor)*                                      /* foreground_color                                             */,
+    const(XColor)*                                      /* background_color                                             */
 );
 extern Cursor XCreateFontCursor(
     Display*                                            /* display                                                      */,
@@ -1477,7 +1478,7 @@ extern Cursor XCreateFontCursor(
 );
 extern Font XLoadFont(
     Display*                                            /* display                                                      */,
-    char*                                               /* name                                                         */
+    const(char)*                                        /* name                                                         */
 );
 extern GC XCreateGC(
     Display*                                            /* display                                                      */,
@@ -1502,7 +1503,7 @@ extern Pixmap XCreatePixmap(
 extern Pixmap XCreateBitmapFromData(
     Display*                                            /* display                                                      */,
     Drawable                                            /* d                                                            */,
-    char*                                               /* data                                                         */,
+    const(char)*                                        /* data                                                         */,
     uint                                                /* width                                                        */,
     uint                                                /* height                                                       */
 );
@@ -1552,13 +1553,13 @@ extern Colormap* XListInstalledColormaps(
 );
 extern char** XListFonts(
     Display*                                            /* display                                                      */,
-    char*                                               /* pattern                                                      */,
+    const(char)*                                        /* pattern                                                      */,
     int                                                 /* maxnames                                                     */,
     int*                                                /* actual_count_return                                          */
 );
 extern char* XListFontsWithInfo(
     Display*                                            /* display                                                      */,
-    char*                                               /* pattern                                                      */,
+    const(char)*                                        /* pattern                                                      */,
     int                                                 /* maxnames                                                     */,
     int*                                                /* count_return                                                 */,
     XFontStruct**                                       /* info_return                                                  */
@@ -1597,7 +1598,7 @@ extern KeySym* XGetKeyboardMapping(
     int*                                                /* keysyms_per_keycode_return                                   */
 );
 extern KeySym XStringToKeysym(
-    char*                                               /* string                                                       */
+    const(char)*                                        /* string                                                       */
 );
 extern c_long XMaxRequestSize(
     Display*                                            /* display                                                      */
@@ -1634,7 +1635,7 @@ extern void XUnlockDisplay(
 
 extern XExtCodes* XInitExtension(
     Display*                                            /* display                                                      */,
-    char*                                               /* name                                                         */
+    const(char)*                                        /* name                                                         */
 );
 
 extern XExtCodes* XAddExtension(
@@ -1873,7 +1874,7 @@ extern Status XAllocColorPlanes(
 extern Status XAllocNamedColor(
     Display*                                            /* display                                                      */,
     Colormap                                            /* colormap                                                     */,
-    char*                                               /* color_name                                                   */,
+    const(char)*                                        /* color_name                                                   */,
     XColor*                                             /* screen_def_return                                            */,
     XColor*                                             /* exact_def_return                                             */
 );
@@ -1957,7 +1958,7 @@ extern int XChangeProperty(
     Atom                                                /* type                                                         */,
     int                                                 /* format                                                       */,
     int                                                 /* mode                                                         */,
-    ubyte*                                              /* data                                                         */,
+    const(ubyte)*                                       /* data                                                         */,
     int                                                 /* nelements                                                    */
 );
 
@@ -2210,7 +2211,7 @@ extern int XDrawImageString(
     GC                                                  /* gc                                                           */,
     int                                                 /* x                                                            */,
     int                                                 /* y                                                            */,
-    char*                                               /* string                                                       */,
+    const(char)*                                        /* string                                                       */,
     int                                                 /* length                                                       */
 );
 
@@ -2292,7 +2293,7 @@ extern int XDrawString(
     GC                                                  /* gc                                                           */,
     int                                                 /* x                                                            */,
     int                                                 /* y                                                            */,
-    char*                                               /* string                                                       */,
+    const(char)*                                        /* string                                                       */,
     int                                                 /* length                                                       */
 );
 
@@ -2460,8 +2461,8 @@ extern int XFreePixmap(
 extern int XGeometry(
     Display*                                            /* display                                                      */,
     int                                                 /* screen                                                       */,
-    char*                                               /* position                                                     */,
-    char*                                               /* default_position                                             */,
+    const(char)*                                        /* position                                                     */,
+    const(char)*                                        /* default_position                                             */,
     uint                                                /* bwidth                                                       */,
     uint                                                /* fwidth                                                       */,
     uint                                                /* fheight                                                      */,
@@ -2475,9 +2476,9 @@ extern int XGeometry(
 
 extern int XGetErrorDatabaseText(
     Display*                                            /* display                                                      */,
-    char*                                               /* name                                                         */,
-    char*                                               /* message                                                      */,
-    char*                                               /* default_string                                               */,
+    const(char)*                                        /* name                                                         */,
+    const(char)*                                        /* message                                                      */,
+    const(char)*                                        /* default_string                                               */,
     char*                                               /* buffer_return                                                */,
     int                                                 /* length                                                       */
 );
@@ -2668,7 +2669,7 @@ extern int XKillClient(
 extern Status XLookupColor(
     Display*                                            /* display                                                      */,
     Colormap                                            /* colormap                                                     */,
-    char*                                               /* color_name                                                   */,
+    const(char)*                                        /* color_name                                                   */,
     XColor*                                             /* exact_def_return                                             */,
     XColor*                                             /* screen_def_return                                            */
 );
@@ -2735,12 +2736,12 @@ extern int XNoOp(
 extern Status XParseColor(
     Display*                                            /* display                                                      */,
     Colormap                                            /* colormap                                                     */,
-    char*                                               /* spec                                                         */,
+    const(char)*                                        /* spec                                                         */,
     XColor*                                             /* exact_def_return                                             */
 );
 
 extern int XParseGeometry(
-    char*                                               /* parsestring                                                  */,
+    const(char)*                                        /* parsestring                                                  */,
     int*                                                /* x_return                                                     */,
     int*                                                /* y_return                                                     */,
     uint*                                               /* width_return                                                 */,
@@ -2854,7 +2855,7 @@ extern int XQueryColors(
 
 extern Bool XQueryExtension(
     Display*                                            /* display                                                      */,
-    char*                                               /* name                                                         */,
+    const(char)*                                        /* name                                                         */,
     int*                                                /* major_opcode_return                                          */,
     int*                                                /* first_event_return                                           */,
     int*                                                /* first_error_return                                           */
@@ -2880,7 +2881,7 @@ extern Bool XQueryPointer(
 extern int XQueryTextExtents(
     Display*                                            /* display                                                      */,
     XID                                                 /* font_ID                                                      */,
-    char*                                               /* string                                                       */,
+    const(char)*                                        /* string                                                       */,
     int                                                 /* nchars                                                       */,
     int*                                                /* direction_return                                             */,
     int*                                                /* font_ascent_return                                           */,
@@ -2891,7 +2892,7 @@ extern int XQueryTextExtents(
 extern int XQueryTextExtents16(
     Display*                                            /* display                                                      */,
     XID                                                 /* font_ID                                                      */,
-    XChar2b*                                            /* string                                                       */,
+    const(XChar2b)*                                     /* string                                                       */,
     int                                                 /* nchars                                                       */,
     int*                                                /* direction_return                                             */,
     int*                                                /* font_ascent_return                                           */,
@@ -2916,7 +2917,7 @@ extern int XRaiseWindow(
 extern int XReadBitmapFile(
     Display*                                            /* display                                                      */,
     Drawable                                            /* d                                                            */,
-    ubyte*                                              /* filename                                                     */,
+    const(char)*                                        /* filename                                                     */,
     uint*                                               /* width_return                                                 */,
     uint*                                               /* height_return                                                */,
     Pixmap*                                             /* bitmap_return                                                */,
@@ -2925,7 +2926,7 @@ extern int XReadBitmapFile(
 );
 
 extern int XReadBitmapFileData(
-    char*                                               /* filename                                                     */,
+    const(char)*                                        /* filename                                                     */,
     uint*                                               /* width_return                                                 */,
     uint*                                               /* height_return                                                */,
     ubyte**                                             /* data_return                                                  */,
@@ -2938,7 +2939,7 @@ extern int XRebindKeysym(
     KeySym                                              /* keysym                                                       */,
     KeySym*                                             /* list                                                         */,
     int                                                 /* mod_count                                                    */,
-    ubyte*                                              /* string                                                       */,
+    const(ubyte)*                                       /* string                                                       */,
     int                                                 /* chars_string                                                 */
 );
 
@@ -3081,7 +3082,7 @@ extern int XSetDashes(
     Display*                                            /* display                                                      */,
     GC                                                  /* gc                                                           */,
     int                                                 /* dash_offset                                                  */,
-    char*                                               /* dash_list                                                    */,
+    const(char)*                                        /* dash_list                                                    */,
     int                                                 /* n                                                            */
 );
 
@@ -3130,7 +3131,7 @@ extern int XSetGraphicsExposures(
 extern int XSetIconName(
     Display*                                            /* display                                                      */,
     Window                                              /* w                                                            */,
-    char*                                               /* icon_name                                                    */
+    const(char)*                                        /* icon_name                                                    */
 );
 
 extern int XSetInputFocus(
@@ -3162,7 +3163,7 @@ extern int XSetPlaneMask(
 
 extern int XSetPointerMapping(
     Display*                                            /* display                                                      */,
-    ubyte*                                              /* map                                                          */,
+    const(ubyte)*                                       /* map                                                          */,
     int                                                 /* nmap                                                         */
 );
 
@@ -3253,14 +3254,14 @@ extern int XSetWindowColormap(
 
 extern int XStoreBuffer(
     Display*                                            /* display                                                      */,
-    char*                                               /* chars                                                        */,
+    const(char)*                                        /* chars                                                        */,
     int                                                 /* nchars                                                       */,
     int                                                 /* buffer                                                       */
 );
 
 extern int XStorechars(
     Display*                                            /* display                                                      */,
-    char*                                               /* chars                                                        */,
+    const(char)*                                        /* chars                                                        */,
     int                                                 /* nchars                                                       */
 );
 
@@ -3280,13 +3281,13 @@ extern int XStoreColors(
 extern int XStoreName(
     Display*                                            /* display                                                      */,
     Window                                              /* w                                                            */,
-    char*                                               /* window_name                                                  */
+    const(char)*                                        /* window_name                                                  */
 );
 
 extern int XStoreNamedColor(
     Display*                                            /* display                                                      */,
     Colormap                                            /* colormap                                                     */,
-    char*                                               /* color                                                        */,
+    const(char)*                                        /* color                                                        */,
     c_ulong                                             /* pixel                                                        */,
     int                                                 /* flags                                                        */
 );
@@ -3298,7 +3299,7 @@ extern int XSync(
 
 extern int XTextExtents(
     XFontStruct*                                        /* font_struct                                                  */,
-    char*                                               /* string                                                       */,
+    const(char)*                                        /* string                                                       */,
     int                                                 /* nchars                                                       */,
     int*                                                /* direction_return                                             */,
     int*                                                /* font_ascent_return                                           */,
@@ -3308,7 +3309,7 @@ extern int XTextExtents(
 
 extern int XTextExtents16(
     XFontStruct*                                        /* font_struct                                                  */,
-    XChar2b*                                            /* string                                                       */,
+    const(XChar2b)*                                     /* string                                                       */,
     int                                                 /* nchars                                                       */,
     int*                                                /* direction_return                                             */,
     int*                                                /* font_ascent_return                                           */,
@@ -3318,13 +3319,13 @@ extern int XTextExtents16(
 
 extern int XTextWidth(
     XFontStruct*                                        /* font_struct                                                  */,
-    char*                                               /* string                                                       */,
+    const(char)*                                        /* string                                                       */,
     int                                                 /* count                                                        */
 );
 
 extern int XTextWidth16(
     XFontStruct*                                        /* font_struct                                                  */,
-    XChar2b*                                            /* string                                                       */,
+    const(XChar2b)*                                     /* string                                                       */,
     int                                                 /* count                                                        */
 );
 
@@ -3425,7 +3426,7 @@ extern int XWindowEvent(
 
 extern int XWriteBitmapFile(
     Display*                                            /* display                                                      */,
-    char*                                               /* filename                                                     */,
+    const(char)*                                        /* filename                                                     */,
     Pixmap                                              /* bitmap                                                       */,
     uint                                                /* width                                                        */,
     uint                                                /* height                                                       */,
@@ -3436,47 +3437,43 @@ extern int XWriteBitmapFile(
 extern Bool XSupportsLocale ( );
 
 extern char* XSetLocaleModifiers(
-    const char*                                         /* modifier_list                                                */
+    const(char)*                                        /* modifier_list                                                */
 );
 
 extern XOM XOpenOM(
     Display*                                            /* display                                                      */,
     _XrmHashBucketRec*                                  /* rdb                                                          */,
-    char*                                               /* res_name                                                     */,
-    char*                                               /* res_class                                                    */
+    const(char)*                                        /* res_name                                                     */,
+    const(char)*                                        /* res_class                                                    */
 );
 
 extern Status XCloseOM(
     XOM                                                 /* om                                                           */
 );
 
-/+todo
 extern char* XSetOMValues(
     XOM                                                 /* om                                                           */,
     ...
-) _X_SENTINEL(0);
+) /*_X_SENTINEL(0)*/;
 
 extern char* XGetOMValues(
     XOM                                                 /* om                                                           */,
     ...
-) _X_SENTINEL(0);
-+/
+) /*_X_SENTINEL(0)*/;
 
 extern Display* XDisplayOfOM(
     XOM                                                 /* om                                                           */
 );
 
 extern char* XLocaleOfOM(
-
     XOM                                                 /* om                                                           */
 );
 
-/+todo
 extern XOC XCreateOC(
     XOM                                                 /* om                                                           */,
     ...
-) _X_SENTINEL(0);
-+/
+) /*_X_SENTINEL(0)*/;
+
 extern void XDestroyOC(
     XOC                                                 /* oc                                                           */
 );
@@ -3485,21 +3482,19 @@ extern XOM XOMOfOC(
     XOC                                                 /* oc                                                           */
 );
 
-/+todo
 extern char* XSetOCValues(
     XOC                                                 /* oc                                                           */,
     ...
-) _X_SENTINEL(0);
+) /*_X_SENTINEL(0)*/;
 
 extern char* XGetOCValues(
     XOC                                                 /* oc                                                           */,
     ...
-) _X_SENTINEL(0);
-+/
+) /*_X_SENTINEL(0)*/;
 
 extern XFontSet XCreateFontSet(
     Display*                                            /* display                                                      */,
-    char*                                               /* base_font_name_list                                          */,
+    const(char)*                                        /* base_font_name_list                                          */,
     char***                                             /* missing_charset_list                                         */,
     int*                                                /* missing_charset_count                                        */,
     char**                                              /* def_string                                                   */
@@ -3542,25 +3537,25 @@ extern XFontSetExtents* XExtentsOfFontSet(
 
 extern int XmbTextEscapement(
     XFontSet                                            /* font_set                                                     */,
-    char*                                               /* text                                                         */,
+    const(char)*                                        /* text                                                         */,
     int                                                 /* chars_text                                                   */
 );
 
 extern int XwcTextEscapement(
     XFontSet                                            /* font_set                                                     */,
-    wchar*                                              /* text                                                         */,
+    const(wchar_t)*                                     /* text                                                         */,
     int                                                 /* num_wchars                                                   */
 );
 
 extern int Xutf8TextEscapement(
     XFontSet                                            /* font_set                                                     */,
-    char*                                               /* text                                                         */,
+    const(char)*                                        /* text                                                         */,
     int                                                 /* chars_text                                                   */
 );
 
 extern int XmbTextExtents(
     XFontSet                                            /* font_set                                                     */,
-    char*                                               /* text                                                         */,
+    const(char)*                                        /* text                                                         */,
     int                                                 /* chars_text                                                   */,
     XRectangle*                                         /* overall_ink_return                                           */,
     XRectangle*                                         /* overall_logical_return                                       */
@@ -3568,7 +3563,7 @@ extern int XmbTextExtents(
 
 extern int XwcTextExtents(
     XFontSet                                            /* font_set                                                     */,
-    wchar*                                              /* text                                                         */,
+    const(wchar_t)*                                     /* text                                                         */,
     int                                                 /* num_wchars                                                   */,
     XRectangle*                                         /* overall_ink_return                                           */,
     XRectangle*                                         /* overall_logical_return                                       */
@@ -3576,7 +3571,7 @@ extern int XwcTextExtents(
 
 extern int Xutf8TextExtents(
     XFontSet                                            /* font_set                                                     */,
-    char*                                               /* text                                                         */,
+    const(char)*                                        /* text                                                         */,
     int                                                 /* chars_text                                                   */,
     XRectangle*                                         /* overall_ink_return                                           */,
     XRectangle*                                         /* overall_logical_return                                       */
@@ -3584,7 +3579,7 @@ extern int Xutf8TextExtents(
 
 extern Status XmbTextPerCharExtents(
     XFontSet                                            /* font_set                                                     */,
-    char*                                               /* text                                                         */,
+    const(char)*                                        /* text                                                         */,
     int                                                 /* chars_text                                                   */,
     XRectangle*                                         /* ink_extents_buffer                                           */,
     XRectangle*                                         /* logical_extents_buffer                                       */,
@@ -3596,7 +3591,7 @@ extern Status XmbTextPerCharExtents(
 
 extern Status XwcTextPerCharExtents(
     XFontSet                                            /* font_set                                                     */,
-    wchar*                                              /* text                                                         */,
+    const(wchar_t)*                                     /* text                                                         */,
     int                                                 /* num_wchars                                                   */,
     XRectangle*                                         /* ink_extents_buffer                                           */,
     XRectangle*                                         /* logical_extents_buffer                                       */,
@@ -3608,7 +3603,7 @@ extern Status XwcTextPerCharExtents(
 
 extern Status Xutf8TextPerCharExtents(
     XFontSet                                            /* font_set                                                     */,
-    char*                                               /* text                                                         */,
+    const(char)*                                        /* text                                                         */,
     int                                                 /* chars_text                                                   */,
     XRectangle*                                         /* ink_extents_buffer                                           */,
     XRectangle*                                         /* logical_extents_buffer                                       */,
@@ -3655,7 +3650,7 @@ extern void XmbDrawString(
     GC                                                  /* gc                                                           */,
     int                                                 /* x                                                            */,
     int                                                 /* y                                                            */,
-    char*                                       /* text                                                         */,
+    const(char)*                                /* text                                                         */,
     int                                                 /* chars_text                                                   */
 );
 
@@ -3666,7 +3661,7 @@ extern void XwcDrawString(
     GC                                                  /* gc                                                           */,
     int                                                 /* x                                                            */,
     int                                                 /* y                                                            */,
-    wchar*                                              /* text                                                         */,
+    const(wchar_t)*                                     /* text                                                         */,
     int                                                 /* num_wchars                                                   */
 );
 
@@ -3677,7 +3672,7 @@ extern void Xutf8DrawString(
     GC                                                  /* gc                                                           */,
     int                                                 /* x                                                            */,
     int                                                 /* y                                                            */,
-    char*                                               /* text                                                         */,
+    const(char)*                                        /* text                                                         */,
     int                                                 /* chars_text                                                   */
 );
 
@@ -3688,7 +3683,7 @@ extern void XmbDrawImageString(
     GC                                                  /* gc                                                           */,
     int                                                 /* x                                                            */,
     int                                                 /* y                                                            */,
-    char*                                               /* text                                                         */,
+    const(char)*                                        /* text                                                         */,
     int                                                 /* chars_text                                                   */
 );
 
@@ -3699,7 +3694,7 @@ extern void XwcDrawImageString(
     GC                                                  /* gc                                                           */,
     int                                                 /* x                                                            */,
     int                                                 /* y                                                            */,
-    wchar*                                              /* text                                                         */,
+    const(wchar_t)*                                     /* text                                                         */,
     int                                                 /* num_wchars                                                   */
 );
 
@@ -3710,7 +3705,7 @@ extern void Xutf8DrawImageString(
     GC                                                  /* gc                                                           */,
     int                                                 /* x                                                            */,
     int                                                 /* y                                                            */,
-    char*                                               /* text                                                         */,
+    const(char)*                                        /* text                                                         */,
     int                                                 /* chars_text                                                   */
 );
 
@@ -3725,15 +3720,16 @@ extern Status XCloseIM(
     XIM                                                 /* im                                                           */
 );
 
-/+
 extern char* XGetIMValues(
-    XIM                                                 /* im                                                           */, ...
-) _X_SENTINEL(0);
+    XIM                                                 /* im                                                           */,
+    ...
+) /*_X_SENTINEL(0)*/;
 
 extern char* XSetIMValues(
-    XIM                                                 /* im                                                           */, ...
-) _X_SENTINEL(0);
-+/
+    XIM                                                 /* im                                                           */,
+    ...
+) /*_X_SENTINEL(0)*/;
+
 extern Display* XDisplayOfIM(
     XIM                                                 /* im                                                           */
 );
@@ -3742,15 +3738,14 @@ extern char* XLocaleOfIM(
     XIM                                                 /* im                                                           */
 );
 
-/+todo
 extern XIC XCreateIC(
-    XIM                                                 /* im                                                           */, ...
-) _X_SENTINEL(0);
+    XIM                                                 /* im                                                           */,
+    ...
+) /*_X_SENTINEL(0)*/;
 
 extern void XDestroyIC(
     XIC                                                 /* ic                                                           */
 );
-+/
 
 extern void XSetICFocus(
     XIC                                                 /* ic                                                           */
@@ -3760,7 +3755,7 @@ extern void XUnsetICFocus(
     XIC                                                 /* ic                                                           */
 );
 
-extern wchar*   XwcResetIC(
+extern wchar_t* XwcResetIC(
     XIC                                                 /* ic                                                           */
 );
 
@@ -3772,15 +3767,15 @@ extern char* Xutf8ResetIC(
     XIC                                                 /* ic                                                           */
 );
 
-/+todo
 extern char* XSetICValues(
-    XIC                                                 /* ic                                                           */, ...
-) _X_SENTINEL(0);
+    XIC                                                 /* ic                                                           */,
+    ...
+) /*_X_SENTINEL(0)*/;
 
 extern char* XGetICValues(
-    XIC                                                 /* ic                                                           */, ...
-) _X_SENTINEL(0);
-+/
+    XIC                                                 /* ic                                                           */,
+    ...
+) /*_X_SENTINEL(0)*/;
 
 extern XIM XIMOfIC(
     XIC                                                 /* ic                                                           */
@@ -3803,7 +3798,7 @@ extern int XmbLookupString(
 extern int XwcLookupString(
     XIC                                                 /* ic                                                           */,
     XKeyPressedEvent*                                   /* event                                                        */,
-    wchar*                                              /* buffer_return                                                */,
+    wchar_t*                                            /* buffer_return                                                */,
     int                                                 /* wchars_buffer                                                */,
     KeySym*                                             /* keysym_return                                                */,
     Status*                                             /* status_return                                                */
@@ -3818,11 +3813,10 @@ extern int Xutf8LookupString(
     Status*                                             /* status_return                                                */
 );
 
-/+todo
 extern XVaNestedList XVaCreateNestedList(
-    int                                                 /*unused                                                        */, ...
-) _X_SENTINEL(0);
-+/
+    int                                                 /*unused                                                        */,
+    ...
+) /*_X_SENTINEL(0)*/;
                                                         /* internal connections for IMs                                 */
 
 extern Bool XRegisterIMInstantiateCallback(
@@ -3883,14 +3877,14 @@ extern void XSetAuthorization(
 );
 
 extern int _Xmbtowc(
-    wchar*                                              /* wstr                                                         */,
+    wchar_t*                                            /* wstr                                                         */,
     char*                                               /* str                                                          */,
     int                                                 /* len                                                          */
 );
 
 extern int _Xwctomb(
     char*                                               /* str                                                          */,
-    wchar                                               /* wc                                                           */
+    wchar_t                                             /* wc                                                           */
 );
 
 extern Bool XGetEventData(

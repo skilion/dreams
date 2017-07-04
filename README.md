@@ -13,7 +13,7 @@
 
 ### Windows
 Install:
-1. [DMD](http://dlang.org/)
+1. [Digital Mars D Compiler](http://dlang.org/)
 2. [Visual Studio](https://www.visualstudio.com/)
 3. [Visual D](http://rainers.github.io/visuald/visuald/StartPage.html)
 4. [OpenAL](https://www.openal.org/)
@@ -21,9 +21,18 @@ Install:
 Open the Visual Studio solution `dreams.sln` and compile all projects
 
 ### Linux
-1. Compile DX11, libaudio, libimage
-2. Install the remaining dependencies (ex. on Arch Linux run `pacman -S freetype2 libjpeg libvorbis openal libpng zlib`)
-3. run `make`
+Install the required dependencies (Debian\Ubuntu):
+```sh
+sudo apt install libfreetype6-dev
+sudo apt install libgl1-mesa-dev libx11-dev
+sudo apt install libjpeg-dev
+sudo apt install libogg-dev libvorbis-dev
+sudo apt install libopenal-dev
+sudo apt install libpng-dev
+# Digital Mars D Compiler
+curl -fsS https://dlang.org/install.sh | bash -s dmd
+```
+Compile the project with `make`
 
 ## Editor
 To enable the editor, execute the application with the `-editor` parameter.

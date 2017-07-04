@@ -1,8 +1,6 @@
 CC = gcc
-ARCH = $(shell getconf LONG_BIT)
-CFLAGS = $(CFLAGS$(ARCH)) -c -Ofast -I../libogg/include -I../libvorbis/include
-CFLAGS32 = -m32 -msse2
-CFLAGS64 = -m64
+CFLAGS = -c -O2
+CFLAGS += -I/usr/include
 
 SOURCES = src/audio.c
 
@@ -11,9 +9,9 @@ OBJS = $(SOURCES:.c=.o)
 .c.o:
 	$(CC) $(CFLAGS) -o$@ $<
 
-libaudio: $(OBJS)
-	ar rcs lib/libaudio.a $(OBJS)
+../lib/libaudio.a: $(OBJS)
+	ar rcs ../lib/libaudio.a $(OBJS)
 
 clean:
 	find -name *.o -delete
-	rm -f lib/libaudio.a
+	rm -f ../lib/libaudio.a
