@@ -16,9 +16,9 @@ package {
 
 void sysInit()
 {
-	initXWindow();
 	loadLibGL();
 	loadGLXFunctions();
+	initXWindow();
 
 	int errorBase, eventBase;
 	if (!glXQueryExtension(display, &errorBase, &eventBase)) {
@@ -49,6 +49,8 @@ void sysShutdown()
 {
 	unloadGLXExtensions();
 	shutdownXWindow();
+	// unload libGL after XCloseDisplay() has been called
+	// libGL registers callbacks functions with Xlib
 	unloadLibGL();
 }
 
