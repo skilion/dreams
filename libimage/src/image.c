@@ -1,11 +1,10 @@
-#include <jinclude.h>
-#include <jpeglib.h>
-#include <png.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 #include <setjmp.h>
+#include <jpeglib.h>
+#include <png.h>
 #include "image.h"
 
 #pragma pack(push, 1)
