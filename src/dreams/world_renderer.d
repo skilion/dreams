@@ -2,7 +2,7 @@ module dreams.world_renderer;
 
 import core.thread;
 import dreams.culling, dreams.view, dreams.world, dreams.world_mesh;
-import std.datetime: StopWatch;
+import std.datetime.stopwatch: StopWatch;
 import std.concurrency, std.exception, std.math;
 import log, matrix, renderer, vector;
 
@@ -90,8 +90,8 @@ final class WorldRenderer
 	{
 		StopWatch sw;
 		sw.start();
-		while (receiveTimeout(dur!"msecs"(0), &onChunkMeshReady)) {
-			if (sw.peek().msecs() >= 5) {
+		while (receiveTimeout(msecs(-1), &onChunkMeshReady)) {
+			if (sw.peek() >= msecs(5)) {
 				break;
 			}
 		}

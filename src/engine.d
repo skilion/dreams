@@ -2,6 +2,7 @@ module engine;
 
 import core.thread, core.time;
 import std.datetime, std.file, std.json;
+import std.datetime.stopwatch: StopWatch;
 import audio, input, log, renderer;
 
 version (Windows)
@@ -65,7 +66,7 @@ public:
 		catch (Throwable) window.width = 0;
 		try window.height = cast(int) config["window"].object["height"].integer;
 		catch (Throwable) window.height = 0;
-		try window.fullscreen = config["window"].object["fullscreen"].type == JSON_TYPE.TRUE;
+		try window.fullscreen = config["window"].object["fullscreen"].type == JSONType.true_;
 		catch (Throwable) window.fullscreen = true;
 
 		audio.init();
@@ -120,7 +121,7 @@ public:
 			inputStopWatch.start();
 			window.pollEvents();
 			inputStopWatch.stop();
-			inputTime = inputStopWatch.peek().msecs();
+			inputTime = inputStopWatch.peek().total!"msecs";
 
 			if (!suspended) {
 				// audio update
@@ -128,7 +129,7 @@ public:
 				audioStopWatch.start();
 				audio.update();
 				audioStopWatch.stop();
-				audioTime = audioStopWatch.peek().msecs();
+				audioTime = audioStopWatch.peek().total!"msecs";
 
 				// game simulation
 				simulationStopWatch.reset();
@@ -140,7 +141,7 @@ public:
 					update(simulationStepFloat);
 				}
 				simulationStopWatch.stop();
-				simulationTime = simulationStopWatch.peek().msecs();
+				simulationTime = simulationStopWatch.peek().total!"msecs";
 
 				// rendering
 				renderer.beginFrame();
@@ -148,7 +149,7 @@ public:
 				renderingStopWatch.start();
 				render();
 				renderingStopWatch.stop();
-				renderingTime = renderingStopWatch.peek().msecs();
+				renderingTime = renderingStopWatch.peek().total!"msecs";
 				renderer.endFrame();
 			}
 
@@ -161,7 +162,7 @@ public:
 			}
 
 			frameStopWatch.stop();
-			frameTime = frameStopWatch.peek().msecs();
+			frameTime = frameStopWatch.peek().total!"msecs";
 
 			Thread.yield();
 			//Thread.sleep!"msecs"(5);

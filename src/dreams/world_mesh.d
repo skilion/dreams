@@ -49,32 +49,32 @@ struct WorldMesh
 			float f_x = x - x0;
 			for (uint y = y0; y < y1; y++) {
 				float f_y = y - y0;
-				near[00] = getBlock(x - 1, y - 1, z0 - 1);
-				near[09] = getBlock(x + 0, y - 1, z0 - 1);
+				near[ 0] = getBlock(x - 1, y - 1, z0 - 1);
+				near[ 9] = getBlock(x + 0, y - 1, z0 - 1);
 				near[18] = getBlock(x + 1, y - 1, z0 - 1);
-				near[03] = getBlock(x - 1, y + 0, z0 - 1);
+				near[ 3] = getBlock(x - 1, y + 0, z0 - 1);
 				near[12] = getBlock(x + 0, y + 0, z0 - 1);
 				near[21] = getBlock(x + 1, y + 0, z0 - 1);
-				near[06] = getBlock(x - 1, y + 1, z0 - 1);
+				near[ 6] = getBlock(x - 1, y + 1, z0 - 1);
 				near[15] = getBlock(x + 0, y + 1, z0 - 1);
 				near[24] = getBlock(x + 1, y + 1, z0 - 1);
-				near[01] = getBlock(x - 1, y - 1, z0 + 0);
+				near[ 1] = getBlock(x - 1, y - 1, z0 + 0);
 				near[10] = getBlock(x + 0, y - 1, z0 + 0);
 				near[19] = getBlock(x + 1, y - 1, z0 + 0);
-				near[04] = getBlock(x - 1, y + 0, z0 + 0);
+				near[ 4] = getBlock(x - 1, y + 0, z0 + 0);
 				near[13] = getBlock(x + 0, y + 0, z0 + 0);
 				near[22] = getBlock(x + 1, y + 0, z0 + 0);
-				near[07] = getBlock(x - 1, y + 1, z0 + 0);
+				near[ 7] = getBlock(x - 1, y + 1, z0 + 0);
 				near[16] = getBlock(x + 0, y + 1, z0 + 0);
 				near[25] = getBlock(x + 1, y + 1, z0 + 0);
 				for (uint z = z0; z < z1; z++) {
-					near[02] = getBlock(x - 1, y - 1, z + 1);
+					near[ 2] = getBlock(x - 1, y - 1, z + 1);
 					near[11] = getBlock(x + 0, y - 1, z + 1);
 					near[20] = getBlock(x + 1, y - 1, z + 1);
-					near[05] = getBlock(x - 1, y + 0, z + 1);
+					near[ 5] = getBlock(x - 1, y + 0, z + 1);
 					near[14] = getBlock(x + 0, y + 0, z + 1);
 					near[23] = getBlock(x + 1, y + 0, z + 1);
-					near[08] = getBlock(x - 1, y + 1, z + 1);
+					near[ 8] = getBlock(x - 1, y + 1, z + 1);
 					near[17] = getBlock(x + 0, y + 1, z + 1);
 					near[26] = getBlock(x + 1, y + 1, z + 1);
 					if (near[13].isOpaque()) {
@@ -82,22 +82,22 @@ struct WorldMesh
 						// add the block geometry to the mesh
 						addBlock(f_x, f_y, f_z, near);
 					}
-					near[00] = near[01];
-					near[09] = near[10];
+					near[ 0] = near[ 1];
+					near[ 9] = near[10];
 					near[18] = near[19];
-					near[03] = near[04];
+					near[ 3] = near[ 4];
 					near[12] = near[13];
 					near[21] = near[22];
-					near[06] = near[07];
+					near[ 6] = near[ 7];
 					near[15] = near[16];
 					near[24] = near[25];
-					near[01] = near[02];
+					near[ 1] = near[ 2];
 					near[10] = near[11];
 					near[19] = near[20];
-					near[04] = near[05];
+					near[ 4] = near[ 5];
 					near[13] = near[14];
 					near[22] = near[23];
-					near[07] = near[08];
+					near[ 7] = near[ 8];
 					near[16] = near[17];
 					near[25] = near[26];
 				}
@@ -108,7 +108,7 @@ struct WorldMesh
 	private void addBlock(float x, float y, float z, const ref WorldBlock[27] near)
 	{
 		uint visibleFaces = testVisibleFaces(
-			near[04], near[22], near[10], near[16], near[12], near[14]
+			near[ 4], near[22], near[10], near[16], near[12], near[14]
 		);
 		ushort texture = near[13].tex;
 		ushort s = (texture & 15) * tileSize; // texture % 16 * tileSize;
@@ -174,30 +174,30 @@ private int vertexAmbientOcclusion(int vertex, const ref WorldBlock[27] near)
 {
 	WorldBlock side0, side1, corner;
 	final switch (vertex) {
-	case 00: side0 = near[01]; side1 = near[03]; corner = near[00]; break;
-	case 01: side0 = near[05]; side1 = near[01]; corner = near[02]; break;
-	case 02: side0 = near[07]; side1 = near[05]; corner = near[08]; break;
-	case 03: side0 = near[03]; side1 = near[07]; corner = near[06]; break;
-	case 04: side0 = near[21]; side1 = near[19]; corner = near[18]; break;
-	case 05: side0 = near[25]; side1 = near[21]; corner = near[24]; break;
-	case 06: side0 = near[23]; side1 = near[25]; corner = near[26]; break;
-	case 07: side0 = near[19]; side1 = near[23]; corner = near[20]; break;
-	case 08: side0 = near[09]; side1 = near[01]; corner = near[00]; break;
-	case 09: side0 = near[19]; side1 = near[09]; corner = near[18]; break;
+	case  0: side0 = near[ 1]; side1 = near[ 3]; corner = near[ 0]; break;
+	case  1: side0 = near[ 5]; side1 = near[ 1]; corner = near[ 2]; break;
+	case  2: side0 = near[ 7]; side1 = near[ 5]; corner = near[ 8]; break;
+	case  3: side0 = near[ 3]; side1 = near[ 7]; corner = near[ 6]; break;
+	case  4: side0 = near[21]; side1 = near[19]; corner = near[18]; break;
+	case  5: side0 = near[25]; side1 = near[21]; corner = near[24]; break;
+	case  6: side0 = near[23]; side1 = near[25]; corner = near[26]; break;
+	case  7: side0 = near[19]; side1 = near[23]; corner = near[20]; break;
+	case  8: side0 = near[ 9]; side1 = near[ 1]; corner = near[ 0]; break;
+	case  9: side0 = near[19]; side1 = near[ 9]; corner = near[18]; break;
 	case 10: side0 = near[11]; side1 = near[19]; corner = near[20]; break;
-	case 11: side0 = near[01]; side1 = near[11]; corner = near[02]; break;
-	case 12: side0 = near[07]; side1 = near[15]; corner = near[06]; break;
-	case 13: side0 = near[17]; side1 = near[07]; corner = near[08]; break;
+	case 11: side0 = near[ 1]; side1 = near[11]; corner = near[ 2]; break;
+	case 12: side0 = near[ 7]; side1 = near[15]; corner = near[ 6]; break;
+	case 13: side0 = near[17]; side1 = near[ 7]; corner = near[ 8]; break;
 	case 14: side0 = near[25]; side1 = near[17]; corner = near[26]; break;
 	case 15: side0 = near[15]; side1 = near[25]; corner = near[24]; break;
-	case 16: side0 = near[09]; side1 = near[03]; corner = near[00]; break;
-	case 17: side0 = near[15]; side1 = near[03]; corner = near[06]; break;
+	case 16: side0 = near[ 9]; side1 = near[ 3]; corner = near[ 0]; break;
+	case 17: side0 = near[15]; side1 = near[ 3]; corner = near[ 6]; break;
 	case 18: side0 = near[21]; side1 = near[15]; corner = near[24]; break;
-	case 19: side0 = near[09]; side1 = near[21]; corner = near[18]; break;
-	case 20: side0 = near[11]; side1 = near[05]; corner = near[02]; break;
+	case 19: side0 = near[ 9]; side1 = near[21]; corner = near[18]; break;
+	case 20: side0 = near[11]; side1 = near[ 5]; corner = near[ 2]; break;
 	case 21: side0 = near[23]; side1 = near[11]; corner = near[20]; break;
 	case 22: side0 = near[17]; side1 = near[23]; corner = near[26]; break;
-	case 23: side0 = near[05]; side1 = near[17]; corner = near[08]; break;
+	case 23: side0 = near[ 5]; side1 = near[17]; corner = near[ 8]; break;
 	}
 	if (side0.isOpaque() && side1.isOpaque()) return 0;
 	return 3 - (side0.isOpaque() + side1.isOpaque() + corner.isOpaque());

@@ -17,7 +17,7 @@ private immutable int[256] permutation = [
 	138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180
 ];
 
-private immutable int[512] p;
+private const int[512] p;
 
 static this()
 {
